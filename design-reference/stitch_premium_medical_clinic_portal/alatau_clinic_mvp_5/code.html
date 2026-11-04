@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="ru"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><title>Contacts</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary-fixed-dim": "#3cddc7", "surface-container-high": "#e2e7ff", "tertiary-container": "#006f63", "primary-container": "#0d6e6e", "on-primary-fixed-variant": "#004f50", "surface-container-lowest": "#ffffff", "background": "#faf8ff", "on-primary-fixed": "#002020", "on-tertiary-fixed": "#00201c", "surface-tint": "#016a6a", "surface-container-highest": "#dae2fd", "on-tertiary-fixed-variant": "#005047", "secondary-container": "#6df5e1", "inverse-primary": "#84d4d3", "secondary": "#006b5f", "secondary-fixed": "#71f8e4", "outline-variant": "#bec9c8", "on-surface": "#131b2e", "on-error-container": "#93000a", "surface-dim": "#d2d9f4", "on-background": "#131b2e", "on-secondary-fixed": "#00201c", "secondary-fixed-dim": "#4fdbc8", "error": "#ba1a1a", "surface-bright": "#faf8ff", "surface-container": "#eaedff", "inverse-on-surface": "#eef0ff", "surface-variant": "#dae2fd", "tertiary-fixed": "#62fae3", "on-error": "#ffffff", "primary-fixed": "#a0f0f0", "on-secondary-fixed-variant": "#005048", "inverse-surface": "#283044", "on-primary-container": "#9dedec", "on-tertiary": "#ffffff", "on-surface-variant": "#3e4948", "primary-fixed-dim": "#84d4d3", "tertiary": "#00554b", "surface-container-low": "#f2f3ff", "primary": "#005454", "surface": "#faf8ff", "on-secondary-container": "#006f64", "error-container": "#ffdad6", "on-primary": "#ffffff", "on-tertiary-container": "#5df6e0", "outline": "#6e7979", "on-secondary": "#ffffff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1.5rem", "margin": "3rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "margin-mobile": "1.25rem", "gutter-mobile": "1rem", "space-2xl": "4rem" }, fontFamily: { "display": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "price-kzt": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "label-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-lg": ["Inter"], "body-sm": ["Inter"], "display-mobile": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "title-md": ["Plus Jakarta Sans"] }, fontSize: { "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.025em", "fontWeight": "700" }], "headline-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "price-kzt": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "display-mobile": ["34px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "title-md": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="w-11 h-11 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm shrink-0"><span class="material-symbols-outlined text-[24px]">local_hospital</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1"><span class="font-title-md text-title-md text-primary tracking-tight font-bold truncate">ALATAU</span><span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Clinic</span></div><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors tabular-nums truncate" href="tel:+77273456789">+7 727 345-67-89</a></div></div><div class="flex items-center gap-space-xs shrink-0"><div aria-label="Language Selector" class="flex items-center bg-surface-container-low rounded-full p-0.5" role="group"><button class="min-w-[30px] h-7 px-1.5 rounded-full font-label-sm text-label-sm font-semibold bg-surface-container-lowest text-primary shadow-xs transition-all" type="button">RU</button><button class="min-w-[30px] h-7 px-1.5 rounded-full font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" type="button">KZ</button></div><a aria-label="WhatsApp" class="w-11 h-11 rounded-full bg-secondary-container/40 text-on-secondary-container flex items-center justify-center hover:bg-secondary-container transition-colors" href="https://wa.me/77273456789" rel="noopener noreferrer" target="_blank"><span class="material-symbols-outlined text-[20px]">chat</span></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-20 pb-24 bg-surface"><div class="flex flex-col w-full px-margin-mobile pb-space-xl gap-space-lg">
+<!-- Header Banner -->
+<div class="flex flex-col gap-1 pt-space-sm">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Швейцарский стандарт комфорта</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-semibold tracking-tight">Контакты и режим работы</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Премиальный медицинский центр у подножия Заилийского Алатау</p>
+</div>
+<!-- Primary Interactive Channels -->
+<div class="grid grid-cols-1 gap-space-sm">
+<!-- Phone / Registry Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">call</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Регистратура и запись</span>
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight truncate">+7 (727) 345-67-89</span>
+</div>
+</div>
+<a class="h-10 px-4 rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center gap-1.5 shrink-0 shadow-sm active:scale-95 transition-transform" href="tel:+77273456789">
+<span class="material-symbols-outlined text-[16px]">phone_in_talk</span>
+<span>Позвонить</span>
+</a>
+</div>
+<!-- WhatsApp Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-11 h-11 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[22px]">chat</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Чат WhatsApp 24/7</span>
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight truncate">+7 (701) 900-88-77</span>
+</div>
+</div>
+<a class="h-10 px-4 rounded-xl bg-secondary text-on-secondary font-label-md text-label-md flex items-center gap-1.5 shrink-0 shadow-sm active:scale-95 transition-transform" href="https://wa.me/77019008877" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>WhatsApp</span>
+</a>
+</div>
+<!-- Email Quick Card -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Электронная почта</span>
+<a class="font-body-md text-body-md text-primary font-semibold truncate hover:underline" href="mailto:info@alatau-clinic.kz">info@alatau-clinic.kz</a>
+</div>
+</div>
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:text-primary active:scale-90 transition-transform shadow-xs" onclick="navigator.clipboard.writeText('info@alatau-clinic.kz'); alert('Email скопирован в буфер обмена');" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Map and Location Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Map Visual Frame -->
+<div class="relative w-full h-52 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-location="Dostyk Avenue 248B, Almaty, Kazakhstan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAdvzhoHiGoSfukXevOkr-0lyoX1vQeT0kMxVTAxdL2NlIXKNohX0PtnqNQTM_TEXgja5OIUjxxGYOGEzHWytcYC-xyfsKVSsIAPGCcmH4DFmlTqsi_oTj-DhGEkvAg5i4Y4JiZosuZ4YFWuzKAeLVhTReKfJ_GVcl_kejnEjrCYU0Nwka-Pe0Cww4mYVla4PujSG-6Lnfn1UlS9bSqpl60qx1Yw92qpIcZq2UJRz3Z')"></div>
+<!-- Mountain & Landmark Pin Badge -->
+<div class="absolute top-3 left-3 bg-surface-container-lowest/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Медеуский р-н • пр. Достык</span>
+</div>
+<!-- Navigation Overlay Pill Button -->
+<div class="absolute bottom-3 right-3 left-3 flex gap-2">
+<a class="flex-1 h-11 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all" href="https://2gis.kz/almaty/search/пр.%20Достык,%20248Б" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[18px]">map</span>
+<span>Открыть в 2ГИС</span>
+</a>
+<a class="flex-1 h-11 rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all" href="https://yandex.kz/maps/?text=пр.+Достык+248Б+Алматы" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[18px]">near_me</span>
+<span>Яндекс Карты</span>
+</a>
+</div>
+</div>
+<!-- Building & Arrival Details -->
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">apartment</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Точный адрес</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">г. Алматы, пр. Достык, 248Б</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">угол ул. Хаджимукана, выше гостиницы «Казахстан»</span>
+</div>
+</div>
+<!-- Building & Parking Perquisite -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-secondary shrink-0">local_parking</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Собственный паркинг</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Отдельное 2-этажное здание клиники. Въезд на охраняемую бесплатную гостевую парковку со стороны ул. Хаджимукана.</span>
+</div>
+</div>
+<!-- Transit Access -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary shrink-0">directions_bus</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Остановка «Хаджимукана» (120 м)</span>
+<div class="flex items-center gap-1.5 mt-1 flex-wrap">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-xs">№ 12</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-xs">№ 29</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-xs">№ 141</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-1">Пешком 2 минуты</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Working Hours Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">График работы</h2>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-secondary-container">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-semibold">Открыто до 20:00</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Weekdays -->
+<div class="flex items-center justify-between py-1.5 border-b-0 bg-surface-container-low px-3 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Понедельник — Пятница</span>
+</div>
+<span class="font-label-lg text-label-lg text-primary font-bold tabular-nums">08:00 – 20:00</span>
+</div>
+<!-- Saturday -->
+<div class="flex items-center justify-between py-1.5 bg-surface-container-low px-3 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Суббота</span>
+</div>
+<span class="font-label-lg text-label-lg text-primary font-bold tabular-nums">09:00 – 16:00</span>
+</div>
+<!-- Sunday -->
+<div class="flex items-start justify-between py-2 bg-surface-container-low px-3 rounded-lg gap-2">
+<div class="flex items-center gap-2 shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span class="font-body-md text-body-md text-on-surface-variant font-medium">Воскресенье</span>
+</div>
+<div class="text-right">
+<span class="font-label-md text-label-md text-on-surface-variant">Выходной день</span>
+<p class="font-label-sm text-label-sm text-secondary">дежурный кабинет по записи</p>
+</div>
+</div>
+</div>
+<!-- Laboratory Notice Pill -->
+<div class="p-space-sm rounded-lg bg-surface-container flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary shrink-0 mt-0.5">biotech</span>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase">Забор анализов</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">• Натощак</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Пн – Сб с <strong class="font-semibold text-on-surface">08:00 до 12:00</strong> без предварительной записи. Результаты в Личном кабинете в течение дня.
+        </p>
+</div>
+</div>
+</div>
+<!-- Interactive Call-back Dispatch Form -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+<span class="font-label-sm text-label-sm uppercase font-semibold">Консьерж-служба клиники</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Остались вопросы?</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Оставьте свой номер телефона, и старший регистратор свяжется с вами в течение <strong class="text-primary font-semibold">10 минут</strong> для детальной консультации.
+      </p>
+</div>
+<form class="flex flex-col gap-space-sm" id="contactInquiryForm" onsubmit="event.preventDefault(); document.getElementById('formSuccessState').classList.remove('hidden'); document.getElementById('contactInquiryForm').classList.add('hidden');">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium" for="userNameInput">Ваше имя</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-[20px] pointer-events-none">person</span>
+<input class="w-full h-12 pl-10 pr-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline-variant font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none transition-colors" id="userNameInput" placeholder="Айгуль" required="" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium" for="userPhoneInput">Номер телефона (Казахстан)</label>
+<div class="relative flex items-center">
+<div class="absolute left-3 flex items-center gap-1.5 pointer-events-none">
+<span class="text-sm">🇰🇿</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">+7</span>
+</div>
+<input class="w-full h-12 pl-16 pr-3 rounded-xl bg-surface-container-low text-on-surface placeholder:text-outline-variant font-body-md text-body-md tabular-nums focus:bg-surface-container-lowest focus:outline-none transition-colors" id="userPhoneInput" maxlength="15" placeholder="(701) 000-00-00" required="" type="tel"/>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0 cursor-pointer" id="consentCheck" required="" type="checkbox"/>
+<label class="font-label-sm text-label-sm text-on-surface-variant select-none cursor-pointer" for="consentCheck">
+          Согласен с политикой обработки персональных данных
+        </label>
+</div>
+<button class="w-full h-12 mt-2 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all" type="submit">
+<span class="material-symbols-outlined text-[18px]">phone_callback</span>
+<span>Заказать обратный звонок</span>
+</button>
+</form>
+<!-- Success Feedback Notification (Hidden by default) -->
+<div class="hidden flex flex-col items-center text-center p-space-md bg-surface-container-low rounded-xl gap-2" id="formSuccessState">
+<div class="w-12 h-12 rounded-full bg-secondary-container/50 text-secondary flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-[28px]">check_circle</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">Заявка принята!</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
+        Регистратор Alatau Clinic уже получил ваш номер и позвонит в течение 10 минут. Спасибо за доверие!
+      </p>
+<button class="mt-2 text-primary font-label-md text-label-md underline" onclick="document.getElementById('formSuccessState').classList.add('hidden'); document.getElementById('contactInquiryForm').classList.remove('hidden');" type="button">
+        Отправить ещё раз
+      </button>
+</div>
+</div>
+<!-- Warm Atmosphere & Facility Snapshot -->
+<div class="rounded-xl overflow-hidden shadow-sm bg-surface-container-lowest flex flex-col">
+<div class="relative w-full h-44 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Warm welcoming reception lounge of a luxury Swiss style private medical clinic in Almaty, large panoramic windows overlooking snow-capped Alatau mountains, natural oak wood elements, soft emerald teal accents, ambient gentle morning sunlight, pristine hygienic architectural photography, ultra realistic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5wuFvELTT9Xy28fGJwfRH2ewDQCoRqfU4tfXb9_bhXA78VQJjOE_ExqnBUrnJxUftSWXQvFnOM7IBrnbFweltBrNdw04_Y7wUY84Mp7aTTkrAyRBGbuXzrKPAhkoC4ZlVVLOQAq0S_9HdLAW7ypA7LhXhYwf6lALTHu7BXQsJ2ule69Td8kLnF2eu5g0WdtjJ8pVwYe2QBwQwrnp3lOvWUYKYnHqIXopxzCa3DsaS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent flex items-end p-space-md">
+<div class="flex flex-col text-on-primary">
+<span class="font-title-md text-title-md font-semibold">Пространство заботы и спокойствия</span>
+<span class="font-body-sm text-body-sm opacity-90">Панорамный вид на горы и персональный сервис без очередей</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple phone formatting helper for Kazakhstan numbers
+  const phoneInput = document.getElementById('userPhoneInput');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function (e) {
+      let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+      if (!x[2]) {
+        e.target.value = x[1] ? '(' + x[1] : '';
+      } else {
+        e.target.value = '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '') + (x[4] ? '-' + x[4] : '');
+      }
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.04)]" data-active-classes="text-primary font-semibold"><div class="h-16 px-1 flex items-center justify-around"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm">Главная</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="services" href="#"><span class="material-symbols-outlined text-[22px]">medical_services</span><span class="font-label-sm text-label-sm">Услуги</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="doctors" href="#"><span class="material-symbols-outlined text-[22px]">stethoscope</span><span class="font-label-sm text-label-sm">Врачи</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="booking" href="#"><span class="material-symbols-outlined text-[22px]">calendar_month</span><span class="font-label-sm text-label-sm">Запись</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] transition-all text-primary font-semibold" data-path="contacts" href="#"><span class="material-symbols-outlined text-[22px]">location_on</span><span class="font-label-sm text-label-sm">Контакты</span></a></div></nav></body></html>

@@ -1,0 +1,222 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StaffRole {
+  ADMIN
+  RECEPTIONIST
+}
+
+enum AuthStage {
+  CHALLENGE
+  AUTHENTICATED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum Locale {
+  ru
+  kk
+}
+
+enum ConsentMethod {
+  WEB_CHECKBOX
+}
+
+model StaffUser {
+  id                  String         @id @default(uuid()) @db.Uuid
+  email               String         @unique
+  passwordHash        String         @map("password_hash")
+  role                StaffRole
+  isActive            Boolean        @default(false) @map("is_active")
+  mfaSecretCiphertext Bytes?         @map("mfa_secret_ciphertext")
+  mfaEnabled          Boolean        @default(false) @map("mfa_enabled")
+  mfaLastUsedCounter  BigInt?        @map("mfa_last_used_counter")
+  passwordChangedAt   DateTime       @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions            StaffSession[]
+  auditEvents         AuditEvent[]
+
+  @@map("staff_users")
+}
+
+model StaffSession {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  user          StaffUser @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  tokenHash     String    @unique @map("token_hash") @db.Char(64)
+  authStage     AuthStage @default(CHALLENGE) @map("auth_stage")
+  mfaVerifiedAt DateTime? @map("mfa_verified_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("staff_sessions")
+}
+
+model Doctor {
+  id                  String               @id @default(uuid()) @db.Uuid
+  slug                String               @unique
+  nameRu              String               @map("name_ru")
+  nameKk              String               @map("name_kk")
+  specialtyRu         String               @map("specialty_ru")
+  specialtyKk         String               @map("specialty_kk")
+  bioRu               String               @default("") @map("bio_ru")
+  bioKk               String               @default("") @map("bio_kk")
+  photoAssetKey       String?              @map("photo_asset_key")
+  isActive            Boolean              @default(true) @map("is_active")
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  services            DoctorService[]
+  availabilityWindows AvailabilityWindow[]
+
+  @@map("doctors")
+}
+
+model Service {
+  id              String          @id @default(uuid()) @db.Uuid
+  slug            String          @unique
+  nameRu          String          @map("name_ru")
+  nameKk          String          @map("name_kk")
+  descriptionRu   String          @default("") @map("description_ru")
+  descriptionKk   String          @default("") @map("description_kk")
+  durationMinutes Int             @map("duration_minutes")
+  priceKzt        Decimal         @map("price_kzt") @db.Decimal(12, 2)
+  isActive        Boolean         @default(true) @map("is_active")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  doctors         DoctorService[]
+
+  @@map("services")
+}
+
+model DoctorService {
+  doctorId     String        @map("doctor_id") @db.Uuid
+  serviceId    String        @map("service_id") @db.Uuid
+  doctor       Doctor        @relation(fields: [doctorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  service      Service       @relation(fields: [serviceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  appointments Appointment[]
+
+  @@id([doctorId, serviceId])
+  @@index([serviceId])
+  @@map("doctor_services")
+}
+
+model AvailabilityWindow {
+  id        String   @id @default(uuid()) @db.Uuid
+  doctorId  String   @map("doctor_id") @db.Uuid
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  startsAt  DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt    DateTime @map("ends_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([doctorId, startsAt])
+  @@map("availability_windows")
+}
+
+model Appointment {
+  id                      String              @id @default(uuid()) @db.Uuid
+  reference               String              @unique @default(uuid()) @db.Uuid
+  doctorId                String              @map("doctor_id") @db.Uuid
+  serviceId               String              @map("service_id") @db.Uuid
+  doctorService           DoctorService       @relation(fields: [doctorId, serviceId], references: [doctorId, serviceId], onDelete: Restrict, onUpdate: Restrict)
+  startsAt                DateTime            @map("starts_at") @db.Timestamptz(3)
+  endsAt                  DateTime            @map("ends_at") @db.Timestamptz(3)
+  durationMinutesSnapshot Int                 @map("duration_minutes_snapshot")
+  priceKztSnapshot        Decimal             @map("price_kzt_snapshot") @db.Decimal(12, 2)
+  status                  AppointmentStatus   @default(PENDING)
+  patientNameCiphertext   Bytes?              @map("patient_name_ciphertext")
+  phoneCiphertext         Bytes?              @map("phone_ciphertext")
+  encryptionKeyVersion    String?             @map("encryption_key_version")
+  version                 Int                 @default(1)
+  anonymizedAt            DateTime?           @map("anonymized_at") @db.Timestamptz(3)
+  createdAt               DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  consent                 AppointmentConsent?
+  idempotencyKeys         IdempotencyKey[]
+
+  @@index([doctorId, startsAt])
+  @@index([serviceId])
+  @@index([doctorId, serviceId])
+  @@index([status, startsAt])
+  @@map("appointments")
+}
+
+model ConsentDocument {
+  id            String               @id @default(uuid()) @db.Uuid
+  version       String               @unique
+  textRu        String               @map("text_ru")
+  textKk        String               @map("text_kk")
+  contentSha256 String               @map("content_sha256") @db.Char(64)
+  publishedAt   DateTime             @default(now()) @map("published_at") @db.Timestamptz(3)
+  retiredAt     DateTime?            @map("retired_at") @db.Timestamptz(3)
+  consents      AppointmentConsent[]
+
+  @@map("consent_documents")
+}
+
+model AppointmentConsent {
+  appointmentId String          @id @map("appointment_id") @db.Uuid
+  appointment   Appointment     @relation(fields: [appointmentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  documentId    String          @map("document_id") @db.Uuid
+  document      ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  acceptedAt    DateTime        @default(now()) @map("accepted_at") @db.Timestamptz(3)
+  locale        Locale
+  method        ConsentMethod   @default(WEB_CHECKBOX)
+  withdrawnAt   DateTime?       @map("withdrawn_at") @db.Timestamptz(3)
+
+  @@index([documentId])
+  @@map("appointment_consents")
+}
+
+model IdempotencyKey {
+  keyHash       String       @id @map("key_hash") @db.Char(64)
+  requestHmac   String       @map("request_hmac") @db.Char(64)
+  appointmentId String?      @map("appointment_id") @db.Uuid
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt     DateTime     @map("expires_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@index([appointmentId])
+  @@map("idempotency_keys")
+}
+
+model AuditEvent {
+  id          String     @id @default(uuid()) @db.Uuid
+  actorUserId String?    @map("actor_user_id") @db.Uuid
+  actor       StaffUser? @relation(fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  action      String
+  entityType  String     @map("entity_type")
+  entityId    String?    @map("entity_id") @db.Uuid
+  requestId   String     @map("request_id") @db.Uuid
+  metadata    Json       @default("{}")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([createdAt])
+  @@map("audit_events")
+}

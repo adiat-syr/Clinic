@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+*.log
+apps/api/src/generated/
+.tmp/
+.DS_Store
+Thumbs.db

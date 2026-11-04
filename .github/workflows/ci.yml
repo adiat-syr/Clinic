@@ -1,0 +1,46 @@
+name: Foundation checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+        env:
+          POSTGRES_USER: clinic_ci
+          POSTGRES_PASSWORD: synthetic_ci_only
+          POSTGRES_DB: clinic_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clinic_ci -d clinic_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      DATA_MODE: synthetic
+      DATABASE_URL: postgresql://clinic_ci:synthetic_ci_only@127.0.0.1:5432/clinic_ci
+      CLINIC_TIME_ZONE: Asia/Almaty
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:validate
+      - run: npm run test:integration
+      - run: npm run smoke

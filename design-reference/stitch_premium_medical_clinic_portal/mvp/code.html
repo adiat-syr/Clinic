@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Alatau Clinic — Панель администратора</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#005454",
+            "primary-hover": "#004343",
+            "primary-container": "#0d6e6e",
+            secondary: "#006b5f",
+            "secondary-container": "#6df5e1",
+            "on-primary": "#ffffff",
+            surface: "#f8fafc",
+            "surface-card": "#ffffff",
+            "surface-muted": "#f1f5f9",
+            "border-subtle": "#e2e8f0",
+            "on-surface": "#0f172a",
+            "on-surface-variant": "#475569",
+            outline: "#94a3b8"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Inter", "sans-serif"]
+          },
+          boxShadow: {
+            card: "0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)",
+            dropdown: "0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05)"
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      h1, h2, h3, h4, .font-heading {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f8fafc] text-on-surface antialiased flex flex-col">
+<!-- TOP NAVIGATION HEADER -->
+<header class="sticky top-0 z-40 h-16 w-full bg-white border-b border-border-subtle px-6 flex items-center justify-between shadow-sm">
+<!-- Brand & Location -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-[22px]">local_hospital</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-heading font-extrabold text-[17px] text-[#0f172a] tracking-tight leading-none">Alatau Clinic</span>
+<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[11px] font-semibold tracking-wide border border-emerald-200/60">
+              Регистратура
+            </span>
+</div>
+<span class="text-[12px] text-slate-500 font-medium mt-0.5">Медицинская информационная система</span>
+</div>
+</div>
+<div class="hidden xl:flex items-center h-8 pl-6 border-l border-slate-200 gap-4 text-xs font-medium text-slate-600">
+<div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60">
+<span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+<span>25 мая 2025, Среда</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60">
+<span class="material-symbols-outlined text-[16px] text-primary">location_on</span>
+<span>Алматы, пр. Достык, 248Б</span>
+</div>
+</div>
+</div>
+<!-- Center Search -->
+<div class="hidden md:flex flex-1 max-w-md mx-6">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[19px]">search</span>
+<input class="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Поиск пациента по ФИО, номеру +7 (7XX)..." type="text"/>
+</div>
+</div>
+<!-- Action & User Profile -->
+<div class="flex items-center gap-3">
+<button class="h-10 px-4 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all active:scale-95" id="openTopModalBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Новая запись</span>
+</button>
+<div class="h-6 w-px bg-slate-200 mx-1"></div>
+<!-- Administrator Profile -->
+<div class="flex items-center gap-3 pl-1">
+<div class="flex flex-col text-right hidden sm:flex">
+<span class="text-xs font-bold text-slate-800 leading-tight">Асель Касымова</span>
+<span class="text-[11px] text-emerald-600 font-medium flex items-center justify-end gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            На смене (онлайн)
+          </span>
+</div>
+<div class="relative group cursor-pointer">
+<div class="w-9 h-9 rounded-xl bg-teal-800 text-white font-bold text-xs flex items-center justify-center border-2 border-white shadow-sm">
+            АК
+          </div>
+</div>
+<button class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors" title="Выйти / Настройки" type="button">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+</button>
+</div>
+</div>
+</header>
+<!-- BODY CONTENT (SIDEBAR + MAIN DASHBOARD) -->
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- LEFT SIDEBAR -->
+<aside class="w-64 bg-white border-r border-border-subtle flex flex-col justify-between shrink-0 select-none">
+<div class="p-4 flex flex-col gap-1">
+<span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">Меню клиники</span>
+<a class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold shadow-sm transition-all" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px]">event_available</span>
+<span>Записи на приём</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold">4 нов.</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">calendar_month</span>
+<span>Календарь врачей</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">medical_services</span>
+<span>Врачи клиники</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">payments</span>
+<span>Прайс-лист и услуги</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">tune</span>
+<span>Настройки клиники</span>
+</a>
+</div>
+<!-- Sidebar Footer Status -->
+<div class="p-4 border-t border-slate-100 bg-slate-50/50">
+<div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200/70 shadow-xs">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="min-w-0">
+<p class="text-xs font-bold text-slate-800 leading-tight">Смена #1 активна</p>
+<p class="text-[11px] text-slate-500 truncate mt-0.5">Alatau MED SaaS v2.4.1</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- MAIN DASHBOARD CONTENT AREA -->
+<main class="flex-1 overflow-y-auto custom-scroll p-6 lg:p-8 space-y-6">
+<!-- TOP METRIC CARDS (4 COLS) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- KPI 1 -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-slate-500">Заявок на подтверждение</span>
+<div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[17px]">ring_volume</span>
+</div>
+</div>
+<div class="my-2 flex items-baseline gap-2.5">
+<span class="font-heading text-2xl font-extrabold text-slate-900">4</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold border border-amber-200/60">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+              Требуют звонка
+            </span>
+</div>
+<p class="text-[11px] text-slate-400">Среднее время отклика: 6 мин</p>
+</div>
+<!-- KPI 2 -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-slate-500">Записей на сегодня</span>
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[17px]">event_note</span>
+</div>
+</div>
+<div class="my-2 flex items-baseline gap-2.5">
+<span class="font-heading text-2xl font-extrabold text-slate-900">18</span>
+<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
+              12 завершено · 6 предстоит
+            </span>
+</div>
+<div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 66.6%;"></div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-slate-500">Свободных окон на сегодня</span>
+<div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[17px]">schedule</span>
+</div>
+</div>
+<div class="my-2 flex items-baseline gap-2">
+<span class="font-heading text-2xl font-extrabold text-slate-900">7</span>
+<span class="text-xs font-medium text-slate-500">из 32 доступных слотов</span>
+</div>
+<p class="text-[11px] text-slate-500 font-medium">Ближайшее окно: Терапевт 12:45</p>
+</div>
+<!-- KPI 4 -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-slate-500">Врачей на смене</span>
+<div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[17px]">stethoscope</span>
+</div>
+</div>
+<div class="my-2 flex items-baseline gap-2">
+<span class="font-heading text-2xl font-extrabold text-slate-900">6</span>
+<span class="text-xs font-medium text-slate-500">специалистов активны</span>
+</div>
+<div class="flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>Кабинеты 201–206 на приёме</span>
+</div>
+</div>
+</section>
+<!-- CONTROL BAR: ACTIONS, DATE SWITCHER & STATUS FILTERS -->
+<section class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+<!-- Left: Add button & Date Picker -->
+<div class="flex flex-wrap items-center gap-3">
+<button class="h-10 px-4 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition-all" onclick="openBookingModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>+ Записать пациента</span>
+</button>
+<!-- Date switcher control -->
+<div class="inline-flex items-center bg-slate-50 border border-slate-200/90 rounded-xl p-1">
+<button class="h-8 px-2.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white text-xs font-medium transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">chevron_left</span>
+<span>Вчера</span>
+</button>
+<div class="px-3 py-1 bg-white rounded-lg shadow-xs text-slate-900 font-semibold text-xs flex items-center gap-1.5 border border-slate-200/50">
+<span class="material-symbols-outlined text-[16px] text-primary">event</span>
+<span>Сегодня, 25 мая</span>
+</div>
+<button class="h-8 px-2.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white text-xs font-medium transition-colors flex items-center gap-1">
+<span>Завтра</span>
+<span class="material-symbols-outlined text-[15px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Right: Status Filter Badges -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+<button class="h-8 px-3 rounded-lg bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs shrink-0">
+<span>Все</span>
+<span class="bg-white/20 text-white px-1.5 py-0.2 rounded-full text-[11px]">22</span>
+</button>
+<button class="h-8 px-3 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/60 text-xs font-medium flex items-center gap-1.5 shrink-0 transition-colors">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+<span>Ожидают звонка</span>
+<span class="bg-amber-200/60 text-amber-900 font-bold px-1.5 py-0.2 rounded-full text-[10px]">4</span>
+</button>
+<button class="h-8 px-3 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 text-xs font-medium flex items-center gap-1.5 shrink-0 transition-colors">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span>Подтверждены</span>
+<span class="bg-slate-200 text-slate-800 font-semibold px-1.5 py-0.2 rounded-full text-[10px]">14</span>
+</button>
+<button class="h-8 px-3 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 text-xs font-medium flex items-center gap-1.5 shrink-0 transition-colors">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+<span>Завершены</span>
+<span class="bg-slate-200 text-slate-800 font-semibold px-1.5 py-0.2 rounded-full text-[10px]">4</span>
+</button>
+</div>
+</section>
+<!-- MAIN WORKSPACE GRID: TABLE (LEFT 7-8 COLS) + INSPECTOR DRAWER (RIGHT 4-5 COLS) -->
+<section class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+<!-- LEFT 7/12: APPOINTMENTS TABLE -->
+<div class="xl:col-span-8 flex flex-col gap-4">
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-card overflow-hidden">
+<div class="p-4 border-b border-slate-100 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-heading font-bold text-sm text-slate-800">Список приёмов на 25 мая</span>
+<span class="text-xs text-slate-400 font-normal">| 22 записи в расписании</span>
+</div>
+<span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                Синхронизировано с Kaspi / WhatsApp
+              </span>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs border-collapse">
+<thead>
+<tr class="bg-slate-50/75 border-b border-slate-200/70 text-slate-500 uppercase tracking-wider text-[11px] font-semibold">
+<th class="py-3 px-4">Время</th>
+<th class="py-3 px-4">Пациент</th>
+<th class="py-3 px-4">Врач</th>
+<th class="py-3 px-4">Услуга</th>
+<th class="py-3 px-4">Оплата</th>
+<th class="py-3 px-4">Статус</th>
+<th class="py-3 px-4 text-right">Действия</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 font-normal text-slate-800">
+<!-- ROW 1 (Active / Selected) -->
+<tr class="cursor-pointer bg-teal-50/50 hover:bg-teal-50/80 border-l-4 border-primary transition-colors" id="row-1" onclick="selectPatient('Арман Сериков', '+7 701 450-12-89', 'Д-р Ерлан Джумадилов', 'Терапевт, Каб. 204', 'Первичный приём терапевта', '9 000 ₸', 'Kaspi QR', '10:00 - 10:30', 'Ожидает звонка', '2041', this)">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="font-bold text-primary bg-white px-2 py-1 rounded-md border border-teal-200/70 shadow-2xs font-mono text-[11px]">
+                        10:00
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">Арман Сериков</div>
+<div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-slate-400">call</span>
+                        +7 701 450-12-89
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-medium text-slate-800">Д-р Ерлан Джумадилов</div>
+<div class="text-[11px] text-slate-400">Терапевт · Каб. 204</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-slate-700">Первичный приём</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">9 000 ₸</div>
+<div class="text-[10px] text-red-600 font-bold flex items-center gap-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Kaspi QR
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/70">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Ожидает звонка
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-hover shadow-xs" title="Подтвердить" type="button">
+<span class="material-symbols-outlined text-[15px]">check</span>
+</button>
+<button class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" title="Перенести" type="button">
+<span class="material-symbols-outlined text-[15px]">update</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2 -->
+<tr class="cursor-pointer hover:bg-slate-50 transition-colors" onclick="selectPatient('Айгуль Муратова', '+7 777 210-99-34', 'Д-р Айгуль Сарсенова', 'Кардиолог, Каб. 201', 'Приём кардиолога + ЭКГ', '16 500 ₸', 'Наличные в кассу', '10:30 - 11:15', 'Подтверждена', '2042', this)">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md font-mono text-[11px]">
+                        10:30
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">Айгуль Муратова</div>
+<div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-slate-400">call</span>
+                        +7 777 210-99-34
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-medium text-slate-800">Д-р Айгуль Сарсенова</div>
+<div class="text-[11px] text-slate-400">Кардиолог · Каб. 201</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-slate-700">Приём кардиолога + ЭКГ</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">16 500 ₸</div>
+<div class="text-[10px] text-slate-500 mt-0.5">Наличные в кассу</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-semibold text-[11px] border border-emerald-200/70">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        Подтверждена
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="h-7 px-2.5 rounded-lg bg-teal-50 text-primary border border-teal-200 hover:bg-primary hover:text-white font-semibold text-[11px] flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">door_front</span>
+<span>Прибыл</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 3 -->
+<tr class="cursor-pointer hover:bg-slate-50 transition-colors" onclick="selectPatient('Данияр Касымов', '+7 702 888-41-11', 'Д-р Ерлан Джумадилов', 'Терапевт, Каб. 204', 'Повторный приём терапевта', '7 000 ₸', 'Kaspi QR', '11:15 - 11:45', 'Подтверждена', '2043', this)">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md font-mono text-[11px]">
+                        11:15
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">Данияр Касымов</div>
+<div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-slate-400">call</span>
+                        +7 702 888-41-11
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-medium text-slate-800">Д-р Ерлан Джумадилов</div>
+<div class="text-[11px] text-slate-400">Терапевт · Каб. 204</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-slate-700">Повторный приём</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">7 000 ₸</div>
+<div class="text-[10px] text-red-600 font-bold flex items-center gap-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Kaspi QR
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-semibold text-[11px] border border-emerald-200/70">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        Подтверждена
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="h-7 px-2.5 rounded-lg bg-teal-50 text-primary border border-teal-200 hover:bg-primary hover:text-white font-semibold text-[11px] flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">door_front</span>
+<span>Прибыл</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 4 -->
+<tr class="cursor-pointer hover:bg-slate-50 transition-colors" onclick="selectPatient('Мадина Омарова', '+7 708 555-22-10', 'Д-р Бауржан Касымов', 'Педиатр, Каб. 206', 'Консультация педиатра', '14 000 ₸', 'Оплата на ресепшн', '11:45 - 12:30', 'Ожидает звонка', '2044', this)">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md font-mono text-[11px]">
+                        11:45
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">Мадина Омарова</div>
+<div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-slate-400">call</span>
+                        +7 708 555-22-10
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-medium text-slate-800">Д-р Бауржан Касымов</div>
+<div class="text-[11px] text-slate-400">Педиатр · Каб. 206</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-medium text-slate-700">Консультация педиатра</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-900">14 000 ₸</div>
+<div class="text-[10px] text-slate-500 mt-0.5">Оплата на ресепшн</div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/70">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Ожидает звонка
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-hover shadow-xs" title="Подтвердить" type="button">
+<span class="material-symbols-outlined text-[15px]">check</span>
+</button>
+<button class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" title="Перенести" type="button">
+<span class="material-symbols-outlined text-[15px]">update</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 5 (Finished) -->
+<tr class="cursor-pointer opacity-75 hover:opacity-100 hover:bg-slate-50 transition-colors" onclick="selectPatient('Кайрат Ахметов', '+7 705 123-90-88', 'Д-р Айгуль Сарсенова', 'Кардиолог, Каб. 201', 'Первичный приём кардиолога', '12 000 ₸', 'Оплачено Kaspi', '09:00 - 09:30', 'Завершена', '2040', this)">
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-md font-mono text-[11px]">
+                        09:00
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-semibold text-slate-700">Кайрат Ахметов</div>
+<div class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[13px]">call</span>
+                        +7 705 123-90-88
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-medium text-slate-700">Д-р Айгуль Сарсенова</div>
+<div class="text-[11px] text-slate-400">Кардиолог · Каб. 201</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="text-slate-600">Первичный приём</span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<div class="font-bold text-slate-800">12 000 ₸</div>
+<div class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[12px]">done_all</span> Оплачено Kaspi
+                      </div>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                        Завершена
+                      </span>
+</td>
+<td class="py-3.5 px-4 whitespace-nowrap text-right">
+<button class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-[11px] transition-colors" type="button">
+                        ЭМК карта
+                      </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Bar -->
+<div class="p-3 px-4 bg-slate-50 border-t border-slate-200/70 flex items-center justify-between text-xs text-slate-500">
+<span>Показано 5 из 22 записей на сегодня</span>
+<div class="flex items-center gap-1.5">
+<button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 flex items-center justify-center opacity-50 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="w-7 h-7 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center">1</span>
+<button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center justify-center" type="button">2</button>
+<button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center justify-center" type="button">3</button>
+<button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BOTTOM AUXILIARY WORKSPACE: DOCTORS SHIFT & PRICE LIST -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Compact Doctors Shift Schedule -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between">
+<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">medical_information</span>
+<h3 class="font-heading font-bold text-xs text-slate-800">График врачей на смене</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[10px] border border-emerald-200/60">
+                  6 специалистов
+                </span>
+</div>
+<div class="divide-y divide-slate-100 my-1 text-xs">
+<div class="py-2 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-primary font-bold text-[11px] flex items-center justify-center">ЕД</div>
+<div>
+<p class="font-semibold text-slate-800 leading-tight">Д-р Ерлан Джумадилов</p>
+<p class="text-[11px] text-slate-500">Терапия · Каб. 204 (09:00 - 18:00)</p>
+</div>
+</div>
+<span class="w-2 h-2 rounded-full bg-emerald-500" title="На приёме"></span>
+</div>
+<div class="py-2 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-primary font-bold text-[11px] flex items-center justify-center">АС</div>
+<div>
+<p class="font-semibold text-slate-800 leading-tight">Д-р Айгуль Сарсенова</p>
+<p class="text-[11px] text-slate-500">Кардиология · Каб. 201 (09:00 - 15:00)</p>
+</div>
+</div>
+<span class="w-2 h-2 rounded-full bg-emerald-500" title="На приёме"></span>
+</div>
+<div class="py-2 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-primary font-bold text-[11px] flex items-center justify-center">БК</div>
+<div>
+<p class="font-semibold text-slate-800 leading-tight">Д-р Бауржан Касымов</p>
+<p class="text-[11px] text-slate-500">Педиатрия · Каб. 206 (11:00 - 19:00)</p>
+</div>
+</div>
+<span class="w-2 h-2 rounded-full bg-emerald-500" title="На приёме"></span>
+</div>
+</div>
+<a class="mt-2 text-center text-primary text-xs font-semibold hover:underline flex items-center justify-center gap-1" href="#">
+<span>Полное расписание кабинетов</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</a>
+</div>
+<!-- Compact Popular Price-List -->
+<div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col justify-between">
+<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">receipt_long</span>
+<h3 class="font-heading font-bold text-xs text-slate-800">Быстрый прайс-лист услуг</h3>
+</div>
+<span class="text-[11px] text-slate-400 font-medium">Актуален</span>
+</div>
+<div class="divide-y divide-slate-100 my-1 text-xs">
+<div class="py-2 flex items-center justify-between">
+<div>
+<p class="font-semibold text-slate-800">Первичный приём терапевта</p>
+<p class="text-[11px] text-slate-500">Консультация 30 мин</p>
+</div>
+<span class="font-bold text-slate-900 font-mono">9 000 ₸</span>
+</div>
+<div class="py-2 flex items-center justify-between">
+<div>
+<p class="font-semibold text-slate-800">Кардиолог + ЭКГ с расшифровкой</p>
+<p class="text-[11px] text-slate-500">Комплекс 45 мин</p>
+</div>
+<span class="font-bold text-slate-900 font-mono">16 500 ₸</span>
+</div>
+<div class="py-2 flex items-center justify-between">
+<div>
+<p class="font-semibold text-slate-800">Консультация педиатра</p>
+<p class="text-[11px] text-slate-500">Приём врача 40 мин</p>
+</div>
+<span class="font-bold text-slate-900 font-mono">14 000 ₸</span>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+<span>Категория: Амбулаторный приём</span>
+<a class="text-primary font-semibold hover:underline" href="#">Открыть весь прейскурант →</a>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT 4/12: DETAILS INSPECTOR DRAWER -->
+<div class="xl:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-card p-5 sticky top-20 flex flex-col gap-4">
+<!-- Inspector Header -->
+<div class="flex items-start justify-between pb-3.5 border-b border-slate-100">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Карточка заявки</span>
+<span class="text-[11px] font-mono font-bold text-primary bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200/60" id="drawerId">#2041</span>
+</div>
+<h2 class="font-heading font-extrabold text-base text-slate-900 mt-1" id="drawerName">Арман Сериков</h2>
+<div class="mt-1" id="drawerBadgeWrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold text-xs border border-amber-200/70" id="drawerBadge">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                  Ожидает подтверждения
+                </span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[11px] text-slate-400 block font-medium">Создана онлайн</span>
+<span class="text-xs font-semibold text-slate-700">25 мая в 08:42</span>
+</div>
+</div>
+<!-- Fast Contact Channels -->
+<div class="grid grid-cols-2 gap-2">
+<a class="h-9 px-3 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs" href="tel:+77014501289" id="drawerCallBtn">
+<span class="material-symbols-outlined text-[17px] text-slate-600">call</span>
+<span>Позвонить</span>
+</a>
+<a class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs" href="https://wa.me/77014501289" id="drawerWaBtn" target="_blank">
+<span class="material-symbols-outlined text-[17px]">chat</span>
+<span>WhatsApp</span>
+</a>
+</div>
+<!-- Structured Details Card -->
+<div class="bg-slate-50 rounded-xl p-3.5 space-y-2.5 border border-slate-200/70 text-xs">
+<div class="flex items-center justify-between">
+<span class="text-slate-500 font-medium">Номер телефона:</span>
+<span class="font-bold text-slate-900 font-mono" id="drawerPhone">+7 (701) 450-12-89</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-slate-500 font-medium">Время визита:</span>
+<span class="font-bold text-primary" id="drawerSlot">10:00 - 10:30 (Сегодня)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-slate-500 font-medium">Специалист:</span>
+<div class="text-right">
+<span class="font-bold text-slate-900 block" id="drawerDoctor">Д-р Ерлан Джумадилов</span>
+<span class="text-[11px] text-slate-500" id="drawerSpec">Терапевт, Каб. 204</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-slate-500 font-medium">Услуга:</span>
+<span class="font-semibold text-slate-800 text-right max-w-[190px]" id="drawerService">Первичный приём терапевта</span>
+</div>
+<div class="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+<span class="text-slate-500 font-medium">К оплате:</span>
+<div class="text-right">
+<span class="font-heading font-extrabold text-sm text-slate-900 font-mono" id="drawerPrice">9 000 ₸</span>
+<span class="block text-[11px] font-bold text-red-600" id="drawerPayment">Kaspi QR</span>
+</div>
+</div>
+</div>
+<!-- Patient Note & Source -->
+<div class="p-3 bg-teal-50/60 rounded-xl border border-teal-100 flex items-start gap-2.5 text-xs">
+<span class="material-symbols-outlined text-[19px] text-primary shrink-0 mt-0.5">info</span>
+<div>
+<p class="font-bold text-slate-900">Примечание регистратуры</p>
+<p class="text-slate-600 text-[11px] mt-0.5">Первый визит пациента, заявка с сайта. Жалобы на сезонную аллергию.</p>
+</div>
+</div>
+<!-- Actions Stack -->
+<div class="space-y-2 pt-1">
+<button class="w-full h-10 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98" id="confirmBookingBtn" type="button">
+<span class="material-symbols-outlined text-[17px]">verified</span>
+<span>Подтвердить запись</span>
+</button>
+<button class="w-full h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors" onclick="alert('Открыто расписание свободных окон для переноса')" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_calendar</span>
+<span>Перенести время</span>
+</button>
+<button class="w-full h-9 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors" onclick="if(confirm('Отменить запись пациента?')) alert('Запись отменена');" type="button">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+<span>Отменить запись</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- MODAL: НОВАЯ ЗАПИСЬ НА ПРИЁМ -->
+<div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="bookingModal">
+<div class="bg-white rounded-2xl w-full max-w-lg shadow-dropdown border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-150">
+<!-- Modal Header -->
+<div class="p-4 px-6 border-b border-slate-100 flex items-center justify-between">
+<div>
+<span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Регистратура</span>
+<h3 class="font-heading font-extrabold text-base text-slate-900">Новая запись на приём</h3>
+</div>
+<button class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center" onclick="closeBookingModal()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Form Body -->
+<form class="p-6 space-y-4" onsubmit="event.preventDefault(); alert('Пациент успешно записан!'); closeBookingModal();">
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">ФИО Пациента *</label>
+<input class="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Например: Нурлан Смагулов" required="" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">Номер телефона *</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">🇰🇿 +7</span>
+<input class="w-full h-10 pl-14 pr-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="(701) 000-00-00" required="" type="tel"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">Врач *</label>
+<select class="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white">
+<option>Д-р Ерлан Джумадилов (Терапевт)</option>
+<option>Д-р Айгуль Сарсенова (Кардиолог)</option>
+<option>Д-р Бауржан Касымов (Педиатр)</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">Услуга *</label>
+<select class="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white">
+<option>Первичный приём (9 000 ₸)</option>
+<option>Повторный приём (7 000 ₸)</option>
+<option>Кардиолог + ЭКГ (16 500 ₸)</option>
+<option>Консультация педиатра (14 000 ₸)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">Дата</label>
+<input class="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white" type="date" value="2025-05-25"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-semibold text-slate-700">Время</label>
+<select class="w-full h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white">
+<option>12:45 - 13:15</option>
+<option>14:00 - 14:30</option>
+<option>15:30 - 16:00</option>
+<option>16:45 - 17:15</option>
+</select>
+</div>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+<button class="h-10 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors" onclick="closeBookingModal()" type="button">
+            Отмена
+          </button>
+<button class="h-10 px-5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all shadow-sm" type="submit">
+            Создать запись
+          </button>
+</div>
+</form>
+</div>
+</div>
+<!-- INTERACTION SCRIPTS -->
+<script>
+    // Modal Helpers
+    function openBookingModal() {
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('bookingModal').classList.add('hidden');
+    }
+
+    document.getElementById('openTopModalBtn')?.addEventListener('click', openBookingModal);
+
+    // Inspector Updater
+    function selectPatient(name, phone, doctor, spec, service, price, payment, time, status, id, rowElement) {
+      document.getElementById('drawerName').textContent = name;
+      document.getElementById('drawerPhone').textContent = phone;
+      document.getElementById('drawerCallBtn').setAttribute('href', 'tel:' + phone.replace(/[^0-9+]/g, ''));
+      document.getElementById('drawerWaBtn').setAttribute('href', 'https://wa.me/' + phone.replace(/[^0-9]/g, ''));
+      document.getElementById('drawerDoctor').textContent = doctor;
+      document.getElementById('drawerSpec').textContent = spec;
+      document.getElementById('drawerService').textContent = service;
+      document.getElementById('drawerPrice').textContent = price;
+      document.getElementById('drawerPayment').textContent = payment;
+      document.getElementById('drawerSlot').textContent = time + ' (Сегодня)';
+      document.getElementById('drawerId').textContent = '#' + id;
+
+      const badge = document.getElementById('drawerBadge');
+      if (status.includes('звонка') || status.includes('Ожидает')) {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold text-xs border border-amber-200/70';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> ' + status;
+      } else if (status.includes('Подтверждена')) {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-semibold text-xs border border-emerald-200/70';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> ' + status;
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs';
+        badge.innerHTML = status;
+      }
+
+      // Highlight active table row
+      document.querySelectorAll('tbody tr').forEach(tr => {
+        tr.classList.remove('bg-teal-50/50', 'bg-teal-50/80', 'border-l-4', 'border-primary');
+      });
+      if (rowElement) {
+        rowElement.classList.add('bg-teal-50/50', 'border-l-4', 'border-primary');
+      }
+    }
+
+    // Confirm button in Drawer
+    document.getElementById('confirmBookingBtn')?.addEventListener('click', function() {
+      const badge = document.getElementById('drawerBadge');
+      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-semibold text-xs border border-emerald-200/70';
+      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Подтверждена';
+      alert('Запись подтверждена! Пациенту направлено SMS-напоминание.');
+    });
+  </script>
+</body></html>

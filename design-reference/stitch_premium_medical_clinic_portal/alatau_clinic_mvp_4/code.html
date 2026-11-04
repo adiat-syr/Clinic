@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="ru"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><title>Booking</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary-fixed-dim": "#3cddc7", "surface-container-high": "#e2e7ff", "tertiary-container": "#006f63", "primary-container": "#0d6e6e", "on-primary-fixed-variant": "#004f50", "surface-container-lowest": "#ffffff", "background": "#faf8ff", "on-primary-fixed": "#002020", "on-tertiary-fixed": "#00201c", "surface-tint": "#016a6a", "surface-container-highest": "#dae2fd", "on-tertiary-fixed-variant": "#005047", "secondary-container": "#6df5e1", "inverse-primary": "#84d4d3", "secondary": "#006b5f", "secondary-fixed": "#71f8e4", "outline-variant": "#bec9c8", "on-surface": "#131b2e", "on-error-container": "#93000a", "surface-dim": "#d2d9f4", "on-background": "#131b2e", "on-secondary-fixed": "#00201c", "secondary-fixed-dim": "#4fdbc8", "error": "#ba1a1a", "surface-bright": "#faf8ff", "surface-container": "#eaedff", "inverse-on-surface": "#eef0ff", "surface-variant": "#dae2fd", "tertiary-fixed": "#62fae3", "on-error": "#ffffff", "primary-fixed": "#a0f0f0", "on-secondary-fixed-variant": "#005048", "inverse-surface": "#283044", "on-primary-container": "#9dedec", "on-tertiary": "#ffffff", "on-surface-variant": "#3e4948", "primary-fixed-dim": "#84d4d3", "tertiary": "#00554b", "surface-container-low": "#f2f3ff", "primary": "#005454", "surface": "#faf8ff", "on-secondary-container": "#006f64", "error-container": "#ffdad6", "on-primary": "#ffffff", "on-tertiary-container": "#5df6e0", "outline": "#6e7979", "on-secondary": "#ffffff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1.5rem", "margin": "3rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "space-xl": "2.5rem", "margin-mobile": "1.25rem", "gutter-mobile": "1rem", "space-2xl": "4rem" }, fontFamily: { "display": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "price-kzt": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "label-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-lg": ["Inter"], "body-sm": ["Inter"], "display-mobile": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "title-md": ["Plus Jakarta Sans"] }, fontSize: { "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.025em", "fontWeight": "700" }], "headline-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-sm": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "price-kzt": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "display-mobile": ["34px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }], "title-md": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><div class="w-11 h-11 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm shrink-0"><span class="material-symbols-outlined text-[24px]">local_hospital</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1"><span class="font-title-md text-title-md text-primary tracking-tight font-bold truncate">ALATAU</span><span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Clinic</span></div><a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors tabular-nums truncate" href="tel:+77273456789">+7 727 345-67-89</a></div></div><div class="flex items-center gap-space-xs shrink-0"><div aria-label="Language Selector" class="flex items-center bg-surface-container-low rounded-full p-0.5" role="group"><button class="min-w-[30px] h-7 px-1.5 rounded-full font-label-sm text-label-sm font-semibold bg-surface-container-lowest text-primary shadow-xs transition-all" type="button">RU</button><button class="min-w-[30px] h-7 px-1.5 rounded-full font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" type="button">KZ</button></div><a aria-label="WhatsApp" class="w-11 h-11 rounded-full bg-secondary-container/40 text-on-secondary-container flex items-center justify-center hover:bg-secondary-container transition-colors" href="https://wa.me/77273456789" rel="noopener noreferrer" target="_blank"><span class="material-symbols-outlined text-[20px]">chat</span></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-20 pb-24 bg-surface"><div class="flex flex-col w-full px-margin-mobile pb-space-xl">
+<!-- Stepper Indicator -->
+<div class="w-full pt-space-sm pb-space-md">
+<div class="flex items-center justify-between relative">
+<div class="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-surface-container rounded-full -z-0">
+<div class="h-full bg-primary-container rounded-full w-1/2 transition-all duration-300"></div>
+</div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-1 z-10">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Врач</span>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-1 z-10">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md ring-4 ring-primary-fixed/40">
+<span class="font-label-sm text-label-sm font-bold">2</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">Время</span>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-1 z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+<span class="font-label-sm text-label-sm">3</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Пациент</span>
+</div>
+</div>
+</div>
+<!-- Step 1 Summary Banner (Selected Doctor) -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-lg flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-xl overflow-hidden bg-surface-container shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait of an experienced Kazakh male physician wearing a pristine white clinical coat with a soft natural smile, set against a quiet, warm-toned Swiss-inspired modern medical office with subtle mountain light through the window." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpsJjkWxwLYxq8Kz8SYw1WtrnMcQjDNcBZyTmg_tdwfFFy1eDzQP8ol4oWhxtAU2ixZ_bDQLGpBV7-usq77vusyjTykmvfh3PEbeLwiRs-aC2UuhgmqLhP7MGxAzxAJMedGUGDKvgFLlGcpaAXW4Wx17suYddzTihBXG2WNxAeAU2vPlu4ZjEn-t-mkQ_6Xo267Q1ETeASLi-V-KVYGhosgMl64eOZDBH1pC9--vjl"/>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="bg-surface-container-low text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full font-semibold">Терапевт</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Стаж 14 лет</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">Д-р Ерлан Джумадилов</span>
+<div class="flex items-center gap-2">
+<span class="font-price-kzt text-price-kzt text-primary">9 000 ₸</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">• 45 мин</span>
+</div>
+</div>
+</div>
+<button aria-label="Сменить специалиста" class="w-9 h-9 rounded-full bg-surface-container-low text-primary flex items-center justify-center hover:bg-surface-container shrink-0 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<!-- Date Selection -->
+<div class="flex flex-col mb-space-lg">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">calendar_today</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Май 2025</h2>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-semibold bg-secondary-container/30 px-2.5 py-1 rounded-full">г. Алматы (GMT+5)</span>
+</div>
+<!-- Date Strip -->
+<div class="flex gap-2 overflow-x-auto pb-1 -mx-margin-mobile px-margin-mobile scrollbar-none" id="date-scroll">
+<!-- Mon 24 -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center shadow-sm transition-all hover:bg-surface-container-low" data-date="24 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Пн</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">24</span>
+</button>
+<!-- Tue 25 (Active / Today) -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-primary text-on-primary flex flex-col items-center justify-center shadow-md shadow-primary/20 transition-all ring-2 ring-primary" data-date="25 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-primary/80">Вт</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">25</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed mt-1"></span>
+</button>
+<!-- Wed 26 -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center shadow-sm transition-all hover:bg-surface-container-low" data-date="26 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ср</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">26</span>
+</button>
+<!-- Thu 27 -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center shadow-sm transition-all hover:bg-surface-container-low" data-date="27 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Чт</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">27</span>
+</button>
+<!-- Fri 28 -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center shadow-sm transition-all hover:bg-surface-container-low" data-date="28 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Пт</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">28</span>
+</button>
+<!-- Sat 29 -->
+<button class="date-chip shrink-0 w-[58px] py-2.5 rounded-xl bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center shadow-sm transition-all hover:bg-surface-container-low" data-date="29 мая" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Сб</span>
+<span class="font-title-md text-title-md font-bold mt-0.5">29</span>
+</button>
+</div>
+</div>
+<!-- Time Slots Grid -->
+<div class="flex flex-col gap-space-md mb-space-xl">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Доступное время</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> 8 свободных слотов
+      </span>
+</div>
+<!-- Morning -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary">wb_sunny</span>
+<span class="font-label-lg text-label-lg font-semibold text-on-surface">Утро</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">09:00 — 12:00</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="09:00" type="button">09:00</button>
+<!-- Busy -->
+<button class="py-2 px-1 rounded-xl bg-surface-container-lowest text-outline-variant font-label-lg text-label-lg tabular-nums text-center line-through cursor-not-allowed opacity-60" disabled="" type="button">09:30</button>
+<!-- Selected -->
+<button class="slot-btn active py-2 px-1 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg font-bold tabular-nums text-center shadow-md shadow-primary/20" data-time="10:00" type="button">10:00</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="10:30" type="button">10:30</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="11:15" type="button">11:15</button>
+</div>
+</div>
+<!-- Afternoon -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary">light_mode</span>
+<span class="font-label-lg text-label-lg font-semibold text-on-surface">День</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:00 — 17:00</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="14:00" type="button">14:00</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="14:30" type="button">14:30</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="15:00" type="button">15:00</button>
+<!-- Busy -->
+<button class="py-2 px-1 rounded-xl bg-surface-container-lowest text-outline-variant font-label-lg text-label-lg tabular-nums text-center line-through cursor-not-allowed opacity-60" disabled="" type="button">15:30</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="16:15" type="button">16:15</button>
+</div>
+</div>
+<!-- Evening -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary">nights_stay</span>
+<span class="font-label-lg text-label-lg font-semibold text-on-surface">Вечер</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">17:00 — 19:00</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="17:00" type="button">17:00</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="17:45" type="button">17:45</button>
+<button class="slot-btn py-2 px-1 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold tabular-nums text-center transition-all hover:bg-surface-container" data-time="18:30" type="button">18:30</button>
+</div>
+</div>
+</div>
+<!-- Step 3: Patient Form -->
+<div class="flex flex-col gap-space-md mb-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm font-bold">3</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Данные пациента</h3>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">lock</span> Конфиденциально
+      </span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-4">
+<!-- Full Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="patient-name">Имя и Фамилия</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-[20px] text-on-surface-variant pointer-events-none">person</span>
+<input class="w-full h-12 pl-11 pr-4 bg-surface-container-low text-on-surface placeholder:text-outline rounded-xl font-body-md text-body-md focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all" id="patient-name" placeholder="Например, Арман Сериков" type="text"/>
+</div>
+</div>
+<!-- Phone with Kazakhstan Mask -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="patient-phone">Номер телефона</label>
+<div class="relative flex items-center">
+<div class="absolute left-3 flex items-center gap-1 pointer-events-none select-none">
+<span class="font-body-md text-body-md text-on-surface font-semibold">🇰🇿</span>
+</div>
+<input class="w-full h-12 pl-11 pr-4 bg-surface-container-low text-on-surface placeholder:text-outline rounded-xl font-body-md text-body-md font-medium tracking-wide tabular-nums focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all" id="patient-phone" placeholder="+7 (701) 123-45-67" type="tel" value="+7 (701) "/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Отправим SMS и напоминание в WhatsApp</span>
+</div>
+<!-- Optional Note -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="patient-note">Примечание для регистратуры <span class="font-normal text-on-surface-variant">(необязательно)</span></label>
+<textarea class="w-full p-3 bg-surface-container-low text-on-surface placeholder:text-outline rounded-xl font-body-md text-body-md resize-none focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all" id="patient-note" placeholder="Жалобы, предпочтения по языку консультации (казахский/русский)" rows="2"></textarea>
+</div>
+<!-- Consent Checkbox -->
+<label class="flex items-start gap-3 cursor-pointer pt-1 group">
+<input checked="" class="mt-0.5 w-5 h-5 rounded accent-primary bg-surface-container-low cursor-pointer shrink-0" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed select-none">
+          Согласен на обработку персональных данных в соответствии с законодательством Республики Казахстан
+        </span>
+</label>
+</div>
+</div>
+<!-- Price Summary Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-space-md flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface">Консультация терапевта</span>
+<span class="font-price-kzt text-price-kzt text-primary">9 000 ₸</span>
+</div>
+<div class="flex items-center gap-2 pt-2 border-t-0 bg-surface-container-low/60 p-2.5 rounded-lg">
+<span class="material-symbols-outlined text-[18px] text-secondary">payments</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Оплата в клинике: Kaspi QR, картой или наличными</span>
+</div>
+</div>
+<!-- CTA Button -->
+<div class="flex flex-col gap-2.5">
+<button class="w-full h-13 py-3.5 px-6 rounded-xl bg-primary text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/25 active:scale-[0.98] transition-all" id="submit-booking-btn" type="button">
+<span class="material-symbols-outlined text-[22px]">calendar_add_on</span>
+<span id="cta-label">Подтвердить запись на 25 мая, 10:00</span>
+</button>
+<!-- State Info Notice -->
+<div class="flex items-start gap-2.5 px-1 py-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">info</span>
+<p class="font-body-sm text-body-sm leading-tight">
+        После отправки администратор клиники перезвонит или напишет в WhatsApp для подтверждения визита.
+      </p>
+</div>
+</div>
+<!-- Micro-dialog Success Toast (Hidden initially) -->
+<div class="hidden fixed bottom-24 left-4 right-4 z-50 p-4 rounded-xl bg-primary-container text-on-primary shadow-xl flex items-center gap-3" id="booking-toast">
+<div class="w-9 h-9 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-lg text-label-lg font-bold">Заявка принята!</span>
+<span class="font-body-sm text-body-sm text-on-primary-container leading-tight">Мы свяжемся с вами в течение 10 минут</span>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    let selectedDate = '25 мая';
+    let selectedTime = '10:00';
+    const ctaLabel = document.getElementById('cta-label');
+    const toast = document.getElementById('booking-toast');
+    const phoneInput = document.getElementById('patient-phone');
+
+    function updateCTA() {
+      if (ctaLabel) {
+        ctaLabel.textContent = `Подтвердить запись на ${selectedDate}, ${selectedTime}`;
+      }
+    }
+
+    // Date chips interaction
+    const dateChips = document.querySelectorAll('.date-chip');
+    dateChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        dateChips.forEach(c => {
+          c.classList.remove('bg-primary', 'text-on-primary', 'shadow-md', 'shadow-primary/20', 'ring-2', 'ring-primary');
+          c.classList.add('bg-surface-container-lowest', 'text-on-surface');
+          const dot = c.querySelector('.bg-secondary-fixed');
+          if (dot) dot.remove();
+          const subText = c.querySelector('span:first-child');
+          if (subText) {
+            subText.classList.remove('text-on-primary/80');
+            subText.classList.add('text-on-surface-variant');
+          }
+        });
+
+        chip.classList.remove('bg-surface-container-lowest', 'text-on-surface');
+        chip.classList.add('bg-primary', 'text-on-primary', 'shadow-md', 'shadow-primary/20', 'ring-2', 'ring-primary');
+        const sub = chip.querySelector('span:first-child');
+        if (sub) {
+          sub.classList.remove('text-on-surface-variant');
+          sub.classList.add('text-on-primary/80');
+        }
+        
+        selectedDate = chip.getAttribute('data-date') || '25 мая';
+        updateCTA();
+      });
+    });
+
+    // Time slot chips interaction
+    const slotButtons = document.querySelectorAll('.slot-btn');
+    slotButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        slotButtons.forEach(b => {
+          b.classList.remove('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md', 'shadow-primary/20');
+          b.classList.add('bg-surface-container-low', 'text-on-surface', 'font-semibold');
+        });
+
+        btn.classList.remove('bg-surface-container-low', 'text-on-surface', 'font-semibold');
+        btn.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md', 'shadow-primary/20');
+        selectedTime = btn.getAttribute('data-time') || '10:00';
+        updateCTA();
+      });
+    });
+
+    // Phone input basic KZ auto-masking behavior
+    if (phoneInput) {
+      phoneInput.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '');
+        if (!val.startsWith('7')) {
+          val = '7' + val;
+        }
+        val = val.substring(0, 11);
+        let formatted = '+7';
+        if (val.length > 1) {
+          formatted += ' (' + val.substring(1, 4);
+        }
+        if (val.length >= 4) {
+          formatted += ') ' + val.substring(4, 7);
+        }
+        if (val.length >= 7) {
+          formatted += '-' + val.substring(7, 9);
+        }
+        if (val.length >= 9) {
+          formatted += '-' + val.substring(9, 11);
+        }
+        e.target.value = formatted;
+      });
+    }
+
+    // Submit handler simulation
+    const submitBtn = document.getElementById('submit-booking-btn');
+    if (submitBtn && toast) {
+      submitBtn.addEventListener('click', () => {
+        toast.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-80');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-80');
+        }, 4000);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.04)]" data-active-classes="text-primary font-semibold"><div class="h-16 px-1 flex items-center justify-around"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm">Главная</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="services" href="#"><span class="material-symbols-outlined text-[22px]">medical_services</span><span class="font-label-sm text-label-sm">Услуги</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="doctors" href="#"><span class="material-symbols-outlined text-[22px]">stethoscope</span><span class="font-label-sm text-label-sm">Врачи</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] transition-all text-primary font-semibold" data-path="booking" href="#"><span class="material-symbols-outlined text-[22px]">calendar_month</span><span class="font-label-sm text-label-sm">Запись</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-primary transition-all" data-path="contacts" href="#"><span class="material-symbols-outlined text-[22px]">location_on</span><span class="font-label-sm text-label-sm">Контакты</span></a></div></nav></body></html>
