@@ -31,6 +31,7 @@ jobs:
       DATABASE_URL: postgresql://clinic_ci:synthetic_ci_only@127.0.0.1:5432/clinic_ci
       CLINIC_TIME_ZONE: Asia/Almaty
       AUTH_ORIGIN: http://127.0.0.1:5173
+      SEO_REQUIRED: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,3 +52,5 @@ jobs:
       - run: npm run db:seed
       - run: npm run setup
       - run: npm run smoke
+      - run: npx playwright install --with-deps chromium
+      - run: node --env-file-if-exists=.env scripts/test-web.mjs

@@ -8,6 +8,8 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 export default defineConfig([
   globalIgnores([
     '**/dist/**',
+    '**/dist-server/**',
+    'test-results/**',
     '**/node_modules/**',
     '**/coverage/**',
     'design-reference/**',

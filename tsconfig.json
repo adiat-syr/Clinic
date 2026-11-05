@@ -4,7 +4,13 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
   },
-  "include": ["vitest.config.ts", "vitest.integration.config.ts"]
+  "include": [
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "playwright.config.ts",
+    "tests/web/**/*.ts"
+  ]
 }
