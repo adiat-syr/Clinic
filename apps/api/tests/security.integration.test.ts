@@ -289,11 +289,20 @@ describe('bootstrap and credential boundaries', () => {
 
 describe('real HTTP authentication, MFA, sessions and CSRF', () => {
   it('revoked challenges cannot consume another live challenge account quota', async () => {
-    const stale=new Client(); await challenge(stale);
-    await db.staffSession.updateMany({where:{tokenHash:hashToken(stale.session())},data:{revokedAt:clock}});
-    const live=new Client(secondBase); await challenge(live); advance();
-    for(let i=0;i<5;i++) expect((await stale.send('POST','/auth/mfa/verify',{code:'000000'})).status).toBe(401);
-    expect((await live.send('POST','/auth/mfa/verify',{code:code(rootSecret)})).status).toBe(200);
+    const stale = new Client();
+    await challenge(stale);
+    await db.staffSession.updateMany({
+      where: { tokenHash: hashToken(stale.session()) },
+      data: { revokedAt: clock },
+    });
+    const live = new Client(secondBase);
+    await challenge(live);
+    advance();
+    for (let i = 0; i < 5; i++)
+      expect((await stale.send('POST', '/auth/mfa/verify', { code: '000000' })).status).toBe(401);
+    expect((await live.send('POST', '/auth/mfa/verify', { code: code(rootSecret) })).status).toBe(
+      200,
+    );
   });
   it('password creates only a challenge; MFA rotates the token and unlocks me', async () => {
     const browser = new Client();

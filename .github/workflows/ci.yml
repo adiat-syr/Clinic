@@ -49,4 +49,5 @@ jobs:
       - run: npm run test:integration
       - run: npm run db:deploy
       - run: npm run db:seed
+      - run: npm run setup
       - run: npm run smoke

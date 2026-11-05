@@ -5,14 +5,21 @@ import type { HealthResponse } from '@clinic/contracts';
 import { createErrorHandler, HttpError } from './middleware/errors.js';
 import { securityRouter } from './modules/security/router.js';
 import type { AuthService } from './modules/security/service.js';
+import type { BookingHttpService } from './modules/booking/http-service.js';
 
 interface AppDependencies {
   database: { ping(): Promise<void> };
   reportUnexpected?: (requestId: string) => void;
   security?: AuthService;
+  booking?: BookingHttpService;
 }
 
-export function createApp({ database, security, reportUnexpected = () => {} }: AppDependencies) {
+export function createApp({
+  database,
+  security,
+  booking,
+  reportUnexpected = () => {},
+}: AppDependencies) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', false);
@@ -39,7 +46,7 @@ export function createApp({ database, security, reportUnexpected = () => {} }: A
     response.json(body);
   });
 
-  if (security) app.use('/api/v1', securityRouter(security));
+  if (security) app.use('/api/v1', securityRouter(security, booking));
   app.use((_request, _response, next) => {
     next(new HttpError(404, 'NOT_FOUND', 'Ресурс не найден'));
   });

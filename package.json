@@ -38,7 +38,8 @@
     "db:down": "docker compose --env-file .env -f infra/compose.yaml down",
     "db:validate": "npm run db:validate --workspace @clinic/api",
     "db:check": "npm run db:check --workspace @clinic/api",
-    "smoke": "npm run build && node scripts/smoke.mjs"
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "consent:publish": "npm run consent:publish --workspace @clinic/api --"
   },
   "overrides": {
     "minimatch": "11.0.1"

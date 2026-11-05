@@ -34,5 +34,15 @@ try {
   }
 }
 
+const privacyEnv = await readFile(env, 'utf8');
+const privacyAdd = [];
+if (!/^CONTACT_KEY_VERSION=/m.test(privacyEnv)) privacyAdd.push('CONTACT_KEY_VERSION=local-v1');
+if (!/^CONTACT_KEYS_JSON=/m.test(privacyEnv))
+  privacyAdd.push(
+    'CONTACT_KEYS_JSON=' + JSON.stringify({ 'local-v1': randomBytes(32).toString('hex') }),
+  );
+if (!/^BOOKING_HMAC_KEY=/m.test(privacyEnv))
+  privacyAdd.push('BOOKING_HMAC_KEY=' + randomBytes(32).toString('hex'));
+if (privacyAdd.length) await appendFile(env, '\n' + privacyAdd.join('\n') + '\n');
 console.log(`Workspace: ${fileURLToPath(root)}`);
 console.log('Next: npm run db:up, npm run db:deploy, npm run db:seed, npm run dev.');

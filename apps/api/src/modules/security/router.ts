@@ -9,6 +9,8 @@ import { CatalogService } from '../catalog/service.js';
 import { StaffService } from './staff.js';
 import type { Transaction } from '../booking/transaction.js';
 import { AuditService } from './audit.js';
+import { registerBookingRoutes } from '../booking/router.js';
+import type { BookingHttpService } from '../booking/http-service.js';
 
 export function readCookie(request: Request, name: string) {
   const matches = (request.headers.cookie ?? '')
@@ -20,7 +22,7 @@ export function readCookie(request: Request, name: string) {
   return /^[A-Za-z0-9_-]{43}$/.test(value) ? value : null;
 }
 
-export function securityRouter(auth: AuthService) {
+export function securityRouter(auth: AuthService, booking?: BookingHttpService) {
   const router = Router();
   const config = auth.config;
   const catalog = new CatalogService(auth.client);
@@ -279,5 +281,6 @@ export function securityRouter(auth: AuthService) {
       ),
     ),
   );
+  if (booking) registerBookingRoutes(router, auth, booking, requireCsrf, session, requestId);
   return router;
 }

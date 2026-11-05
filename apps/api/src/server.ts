@@ -4,6 +4,8 @@ import { createDatabase } from './infrastructure/database.js';
 import { createPrisma } from './infrastructure/prisma.js';
 import { parseSecurityEnvironment } from './modules/security/config.js';
 import { AuthService } from './modules/security/service.js';
+import { BookingHttpService } from './modules/booking/http-service.js';
+import { parsePrivacyEnvironment } from './modules/booking/privacy.js';
 
 function logEvent(level: 'info' | 'error', event: string, requestId?: string) {
   const output = JSON.stringify({ level, event, ...(requestId ? { requestId } : {}) });
@@ -16,6 +18,7 @@ try {
   const securityConfig = parseSecurityEnvironment(process.env);
   const prisma = createPrisma(config.DATABASE_URL);
   const security = new AuthService(prisma, securityConfig);
+  const booking = new BookingHttpService(prisma, parsePrivacyEnvironment(process.env));
   await security.ready();
   const database = createDatabase(config.DATABASE_URL, () =>
     logEvent('error', 'database_pool_error'),
@@ -23,6 +26,7 @@ try {
   const app = createApp({
     database,
     security,
+    booking,
     reportUnexpected: (requestId) => logEvent('error', 'unexpected_request_error', requestId),
   });
   const server = app.listen(config.API_PORT, config.API_HOST, () => {

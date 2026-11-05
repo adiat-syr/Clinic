@@ -14,7 +14,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma generate && prisma db seed",
     "db:validate": "prisma validate",
-    "db:check": "node --env-file=../../.env --import tsx scripts/check-database.ts"
+    "db:check": "node --env-file=../../.env --import tsx scripts/check-database.ts",
+    "consent:publish": "node --env-file=../../.env --import tsx scripts/consent.ts"
   },
   "dependencies": {
     "@clinic/contracts": "0.1.0",

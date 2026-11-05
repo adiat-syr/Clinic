@@ -19,7 +19,6 @@ import {
 import {
   activeOffer,
   appointmentSelection,
-  audit,
   lockAppointment,
   lockDoctors,
   lockServices,
@@ -33,6 +32,9 @@ type Interval = { startsAt: Date; endsAt: Date };
 
 interface BookingOptions {
   idempotencySecret: Uint8Array;
+  transaction?: Transaction;
+  actorId?: string;
+  requestId?: string;
   now?: () => Date;
   slotStepMinutes?: number;
   minimumLeadMinutes?: number;
@@ -48,7 +50,7 @@ export class BookingService {
 
   constructor(
     private readonly client: PrismaClient,
-    options: BookingOptions,
+    private readonly options: BookingOptions,
   ) {
     if (options.idempotencySecret.length < 32)
       throw new Error('A server-side HMAC key is required');
@@ -73,6 +75,30 @@ export class BookingService {
     this.horizon = horizon * DAY;
   }
 
+  private transact<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
+    return this.options.transaction
+      ? work(this.options.transaction)
+      : withTransaction(this.client, work);
+  }
+  inTransaction(tx: Transaction, actorId: string, requestId: string) {
+    return new BookingService(this.client, {
+      ...this.options,
+      transaction: tx,
+      actorId,
+      requestId,
+    });
+  }
+  private audit(tx: Transaction, action: string, entity: string, id: string, requestId: string) {
+    return tx.auditEvent.create({
+      data: {
+        action,
+        entityType: entity,
+        entityId: id,
+        requestId: this.options.requestId ?? requestId,
+        actorUserId: this.options.actorId ?? null,
+      },
+    });
+  }
   private validateWindow(window: Interval) {
     const length = window.endsAt.getTime() - window.startsAt.getTime();
     if (
@@ -157,7 +183,7 @@ export class BookingService {
       )
       .digest('hex');
 
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       // This additional lock is always FIRST; no other operation acquires it after a doctor lock.
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${Buffer.from(keyHash, 'hex').readBigInt64BE(0)}::bigint)`;
       let now = this.now();
@@ -235,7 +261,7 @@ export class BookingService {
     ) {
       throw new BookingError('INVALID_DATE_RANGE');
     }
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await lockDoctors(tx, [command.doctorId]);
       await lockServices(tx, [command.serviceId]);
       const offer = await activeOffer(tx, command.doctorId, command.serviceId);
@@ -289,10 +315,10 @@ export class BookingService {
   async createWindow(input: unknown) {
     const command = parse(windowSchema, input);
     this.validateWindow(command);
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await lockDoctors(tx, [command.doctorId]);
       const window = await tx.availabilityWindow.create({ data: command });
-      await audit(tx, 'WINDOW_CREATED', 'availability_window', window.id, randomUUID());
+      await this.audit(tx, 'WINDOW_CREATED', 'availability_window', window.id, randomUUID());
       return window;
     });
   }
@@ -307,7 +333,7 @@ export class BookingService {
       if (replacement.doctorId !== initial.doctorId)
         throw new BookingError('WINDOW_DOCTOR_IMMUTABLE');
     }
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await lockDoctors(tx, [initial.doctorId]);
       const current = await tx.availabilityWindow.findUnique({ where: { id } });
       if (!current) throw new BookingError('WINDOW_NOT_FOUND');
@@ -334,7 +360,7 @@ export class BookingService {
       }
       if (replacement) await tx.availabilityWindow.update({ where: { id }, data: replacement });
       else await tx.availabilityWindow.delete({ where: { id } });
-      await audit(
+      await this.audit(
         tx,
         replacement ? 'WINDOW_UPDATED' : 'WINDOW_DELETED',
         'availability_window',
@@ -358,7 +384,7 @@ export class BookingService {
       select: appointmentSelection,
     });
     if (!initial) throw new BookingError('APPOINTMENT_NOT_FOUND');
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await lockDoctors(tx, [initial.doctorId, command.doctorId]);
       await lockServices(tx, [initial.serviceId, command.serviceId]);
       const current = await lockAppointment(tx, command.appointmentId);
@@ -394,7 +420,7 @@ export class BookingService {
         },
         select: appointmentSelection,
       });
-      await audit(tx, 'APPOINTMENT_RESCHEDULED', 'appointment', row.id, randomUUID());
+      await this.audit(tx, 'APPOINTMENT_RESCHEDULED', 'appointment', row.id, randomUUID());
       return safeAppointment(row);
     });
   }
@@ -406,7 +432,7 @@ export class BookingService {
       select: appointmentSelection,
     });
     if (!initial) throw new BookingError('APPOINTMENT_NOT_FOUND');
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await lockDoctors(tx, [initial.doctorId]);
       await lockServices(tx, [initial.serviceId]);
       const current = await lockAppointment(tx, initial.id);
@@ -433,7 +459,7 @@ export class BookingService {
         data: { status: command.status, version: { increment: 1 } },
         select: appointmentSelection,
       });
-      await audit(tx, `APPOINTMENT_${command.status}`, 'appointment', row.id, randomUUID());
+      await this.audit(tx, `APPOINTMENT_${command.status}`, 'appointment', row.id, randomUUID());
       return safeAppointment(row);
     });
   }
@@ -441,7 +467,7 @@ export class BookingService {
   async setDoctorActive(idInput: unknown, active: boolean) {
     const id = parse(uuid, idInput);
     if (typeof active !== 'boolean') throw new BookingError('INVALID_INPUT');
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await updateDoctorLocked(tx, id, { isActive: active });
     });
   }
@@ -450,7 +476,7 @@ export class BookingService {
     const doctorId = parse(uuid, doctorInput);
     const serviceId = parse(uuid, serviceInput);
     if (typeof active !== 'boolean') throw new BookingError('INVALID_INPUT');
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await setAssignmentLocked(tx, doctorId, serviceId, active);
     });
   }
@@ -458,7 +484,7 @@ export class BookingService {
   async changeService(input: unknown) {
     const { serviceId, ...change } = parse(serviceChangeSchema, input);
     if (!Object.keys(change).length) throw new BookingError('INVALID_INPUT');
-    return withTransaction(this.client, async (tx) => {
+    return this.transact(async (tx) => {
       await updateServiceLocked(tx, serviceId, {
         ...(change.priceKzt !== undefined ? { priceKzt: change.priceKzt } : {}),
         ...(change.durationMinutes !== undefined

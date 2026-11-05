@@ -1,3 +1,4 @@
+import { bookingOpenApi } from './booking-openapi.js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { format, resolveConfig } from 'prettier';
@@ -366,13 +367,16 @@ paths['/admin/audit-events'] = {
     ],
   },
 };
+const bookingSpec = bookingOpenApi();
+Object.assign(paths, bookingSpec.paths);
+Object.assign(schemas, bookingSpec.schemas);
 const document = {
   openapi: '3.1.0',
   info: {
-    title: 'Clinic API — stage 3',
-    version: '0.3.0',
+    title: 'Clinic API — stage 4',
+    version: '0.4.0',
     description:
-      'Synthetic local implementation. No booking/schedule HTTP API or admin UI. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations.',
+      'Synthetic local implementation with booking/schedule API. No admin UI. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations.',
   },
   servers: [{ url: '/api/v1' }],
   paths,
