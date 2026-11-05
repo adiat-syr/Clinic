@@ -25,7 +25,11 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run build --workspace @clinic/contracts && vitest run",
+    "test": "npm run build --workspace @clinic/contracts && npm run db:generate && vitest run",
+    "staff:bootstrap": "npm run staff:bootstrap --workspace @clinic/api",
+    "staff:credentials": "npm run staff:credentials --workspace @clinic/api",
+    "openapi:generate": "node --import tsx apps/api/scripts/openapi.ts",
+    "openapi:check": "node --import tsx apps/api/scripts/openapi.ts --check",
     "test:integration": "npm run db:generate && node --env-file-if-exists=.env --import tsx apps/api/scripts/test-integration.ts",
     "db:generate": "npm run db:generate --workspace @clinic/api",
     "db:deploy": "npm run db:deploy --workspace @clinic/api",
@@ -53,6 +57,7 @@
     "vitest": "5.1.0"
   },
   "allowScripts": {
+    "argon2@0.45.2": true,
     "esbuild@0.28.2": true,
     "prisma@7.10.1": true,
     "@prisma/engines@7.10.1": true

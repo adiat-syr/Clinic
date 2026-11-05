@@ -30,6 +30,7 @@ jobs:
       DATA_MODE: synthetic
       DATABASE_URL: postgresql://clinic_ci:synthetic_ci_only@127.0.0.1:5432/clinic_ci
       CLINIC_TIME_ZONE: Asia/Almaty
+      AUTH_ORIGIN: http://127.0.0.1:5173
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,10 +38,15 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
+      - name: Ephemeral server keys
+        run: node --input-type=module -e 'import {appendFileSync} from "node:fs"; import {randomBytes} from "node:crypto"; appendFileSync(process.env.GITHUB_ENV,"AUTH_MFA_KEY="+randomBytes(32).toString("hex")+"\nAUTH_CSRF_KEY="+randomBytes(32).toString("hex")+"\n");'
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run openapi:check
       - run: npm test
       - run: npm run db:validate
       - run: npm run test:integration
+      - run: npm run db:deploy
+      - run: npm run db:seed
       - run: npm run smoke

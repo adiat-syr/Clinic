@@ -38,19 +38,20 @@ enum ConsentMethod {
 }
 
 model StaffUser {
-  id                  String         @id @default(uuid()) @db.Uuid
-  email               String         @unique
-  passwordHash        String         @map("password_hash")
+  id                  String          @id @default(uuid()) @db.Uuid
+  email               String          @unique
+  passwordHash        String          @map("password_hash")
   role                StaffRole
-  isActive            Boolean        @default(false) @map("is_active")
-  mfaSecretCiphertext Bytes?         @map("mfa_secret_ciphertext")
-  mfaEnabled          Boolean        @default(false) @map("mfa_enabled")
-  mfaLastUsedCounter  BigInt?        @map("mfa_last_used_counter")
-  passwordChangedAt   DateTime       @default(now()) @map("password_changed_at") @db.Timestamptz(3)
-  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  isActive            Boolean         @default(false) @map("is_active")
+  mfaSecretCiphertext Bytes?          @map("mfa_secret_ciphertext")
+  mfaEnabled          Boolean         @default(false) @map("mfa_enabled")
+  mfaLastUsedCounter  BigInt?         @map("mfa_last_used_counter")
+  passwordChangedAt   DateTime        @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
   sessions            StaffSession[]
   auditEvents         AuditEvent[]
+  bootstrapState      BootstrapState?
 
   @@map("staff_users")
 }
@@ -219,4 +220,22 @@ model AuditEvent {
   @@index([entityType, entityId, createdAt])
   @@index([createdAt])
   @@map("audit_events")
+}
+
+model BootstrapState {
+  id          Boolean   @id @default(true)
+  adminUserId String    @unique @map("admin_user_id") @db.Uuid
+  admin       StaffUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  completedAt DateTime  @default(now()) @map("completed_at") @db.Timestamptz(3)
+
+  @@map("bootstrap_state")
+}
+
+model RateLimitBucket {
+  keyHash  String   @id @map("key_hash") @db.Char(64)
+  attempts Int
+  resetsAt DateTime @map("resets_at") @db.Timestamptz(3)
+
+  @@index([resetsAt])
+  @@map("rate_limit_buckets")
 }

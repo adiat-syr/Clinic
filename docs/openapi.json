@@ -1,0 +1,3900 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Clinic API — stage 3",
+    "version": "0.3.0",
+    "description": "Synthetic local implementation. No booking/schedule HTTP API or admin UI. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations."
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "paths": {
+    "/health/live": {
+      "get": {
+        "operationId": "liveness",
+        "summary": "Process liveness",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Health" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "readiness",
+        "summary": "Database readiness",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Health" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/csrf": {
+      "get": {
+        "operationId": "csrf",
+        "summary": "Issue nonce cookie and session-bound CSRF header value",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Csrf" } } }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Verify password and issue five-minute CHALLENGE cookie",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Login" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Challenge" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "operationId": "verifyMfa",
+        "summary": "Consume TOTP code once, rotate cookie, authenticate",
+        "description": "Session required; MFA verification accepts a CHALLENGE session only. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/MfaCode" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Authenticated" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "me",
+        "summary": "Current fully authenticated staff identity",
+        "description": "Session required; MFA verification accepts a CHALLENGE session only. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Me" } } }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Revoke authenticated or challenge session",
+        "description": "Session required; MFA verification accepts a CHALLENGE session only. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Empty" } } }
+        },
+        "responses": {
+          "204": {
+            "description": "Completed; session cookie is cleared for logout/password change"
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "operationId": "password",
+        "summary": "Change own password and revoke all own sessions",
+        "description": "Session required; MFA verification accepts a CHALLENGE session only. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PasswordChange" } }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Completed; session cookie is cleared for logout/password change"
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/doctors": {
+      "get": {
+        "operationId": "listPublicDoctor",
+        "summary": "Active doctors",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PublicDoctorPage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ]
+      }
+    },
+    "/doctors/{slug}": {
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 100 }
+        }
+      ],
+      "get": {
+        "operationId": "getPublicDoctor",
+        "summary": "Active Doctor by slug",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PublicDoctor" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/doctors": {
+      "get": {
+        "operationId": "listAdminDoctor",
+        "summary": "All doctors, including inactive",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminDoctorPage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createDoctor",
+        "summary": "Create Doctor",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DoctorCreate" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminDoctor" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/doctors/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "operationId": "getAdminDoctor",
+        "summary": "Doctor by UUID",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminDoctor" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchDoctor",
+        "summary": "Edit or deactivate Doctor; slug is immutable",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DoctorPatch" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminDoctor" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/services": {
+      "get": {
+        "operationId": "listPublicService",
+        "summary": "Active services",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PublicServicePage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ]
+      }
+    },
+    "/services/{slug}": {
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 100 }
+        }
+      ],
+      "get": {
+        "operationId": "getPublicService",
+        "summary": "Active Service by slug",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PublicService" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services": {
+      "get": {
+        "operationId": "listAdminService",
+        "summary": "All services, including inactive",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminServicePage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createService",
+        "summary": "Create Service",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ServiceCreate" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminService" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "operationId": "getAdminService",
+        "summary": "Service by UUID",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminService" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchService",
+        "summary": "Edit or deactivate Service; slug is immutable",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ServicePatch" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminService" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/doctors/{id}/services/{serviceId}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        },
+        {
+          "name": "serviceId",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "put": {
+        "operationId": "assignService",
+        "summary": "Assign/reactivate/deactivate doctor–service relationship",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AssignmentInput" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Assignment" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/staff": {
+      "get": {
+        "operationId": "listStaff",
+        "summary": "Audited staff list without credentials",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/StaffPage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createStaff",
+        "summary": "Create inactive account; credentials are provisioned offline",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/StaffCreate" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Staff" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/staff/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "get": {
+        "operationId": "getStaff",
+        "summary": "Audited staff identity without credentials",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Staff" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchStaff",
+        "summary": "Change role or block/unblock; preserve last ADMIN",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/StaffPatch" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Staff" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/staff/{id}/revoke-sessions": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string", "format": "uuid" }
+        }
+      ],
+      "post": {
+        "operationId": "revokeSessions",
+        "summary": "Revoke all target sessions",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "description": "Must exactly match configured AUTH_ORIGIN.",
+            "schema": { "type": "string", "format": "uri" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Empty" } } }
+        },
+        "responses": {
+          "204": {
+            "description": "Completed; session cookie is cleared for logout/password change"
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/admin/audit-events": {
+      "get": {
+        "operationId": "listAudit",
+        "summary": "Audited paginated technical events; no PII values",
+        "description": "ADMIN and fully verified MFA session required. Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [{ "SessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuditPage" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "ISO instant; default last seven days, maximum span 31 days.",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "ISO instant; default last seven days, maximum span 31 days.",
+            "schema": { "type": "string", "format": "date-time" }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pagination": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+          "pageSize": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "total": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
+        },
+        "required": ["page", "pageSize", "total"],
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "message": { "type": "string", "minLength": 1 },
+              "requestId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": ["code", "message", "requestId"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["error"],
+        "additionalProperties": false
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "ready"] },
+          "service": { "type": "string", "const": "clinic-api" },
+          "dataMode": { "type": "string", "const": "synthetic" }
+        },
+        "required": ["status", "service", "dataMode"],
+        "additionalProperties": false
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string", "minLength": 1, "maxLength": 128, "writeOnly": true }
+        },
+        "required": ["email", "password"],
+        "additionalProperties": false
+      },
+      "MfaCode": {
+        "type": "object",
+        "properties": { "code": { "type": "string", "pattern": "^\\d{6}$", "writeOnly": true } },
+        "required": ["code"],
+        "additionalProperties": false
+      },
+      "PasswordChange": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "newPassword": { "type": "string", "minLength": 16, "maxLength": 128, "writeOnly": true }
+        },
+        "required": ["currentPassword", "newPassword"],
+        "additionalProperties": false
+      },
+      "Empty": { "type": "object", "properties": {}, "additionalProperties": false },
+      "Csrf": {
+        "type": "object",
+        "properties": { "csrfToken": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+        "required": ["csrfToken"],
+        "additionalProperties": false
+      },
+      "Challenge": {
+        "type": "object",
+        "properties": { "mfaRequired": { "type": "boolean", "const": true } },
+        "required": ["mfaRequired"],
+        "additionalProperties": false
+      },
+      "Authenticated": {
+        "type": "object",
+        "properties": { "authenticated": { "type": "boolean", "const": true } },
+        "required": ["authenticated"],
+        "additionalProperties": false
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "role": { "type": "string", "enum": ["ADMIN", "RECEPTIONIST"] }
+        },
+        "required": ["id", "email", "role"],
+        "additionalProperties": false
+      },
+      "DoctorCreate": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "bioRu": { "type": "string", "maxLength": 10000 },
+          "bioKk": { "type": "string", "maxLength": 10000 },
+          "photoAssetKey": {
+            "anyOf": [
+              { "type": "string", "pattern": "^doctors\\/[a-z0-9-]+\\.(?:webp|avif|png|jpg)$" },
+              { "type": "null" }
+            ]
+          },
+          "isActive": { "default": true, "type": "boolean" }
+        },
+        "required": [
+          "slug",
+          "nameRu",
+          "nameKk",
+          "specialtyRu",
+          "specialtyKk",
+          "bioRu",
+          "bioKk",
+          "photoAssetKey"
+        ],
+        "additionalProperties": false
+      },
+      "DoctorPatch": {
+        "type": "object",
+        "properties": {
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "bioRu": { "type": "string", "maxLength": 10000 },
+          "bioKk": { "type": "string", "maxLength": 10000 },
+          "photoAssetKey": {
+            "anyOf": [
+              { "type": "string", "pattern": "^doctors\\/[a-z0-9-]+\\.(?:webp|avif|png|jpg)$" },
+              { "type": "null" }
+            ]
+          },
+          "isActive": { "type": "boolean" }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "ServiceCreate": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "descriptionRu": { "type": "string", "maxLength": 10000 },
+          "descriptionKk": { "type": "string", "maxLength": 10000 },
+          "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+          "priceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" },
+          "isActive": { "default": true, "type": "boolean" }
+        },
+        "required": [
+          "slug",
+          "nameRu",
+          "nameKk",
+          "descriptionRu",
+          "descriptionKk",
+          "durationMinutes",
+          "priceKzt"
+        ],
+        "additionalProperties": false
+      },
+      "ServicePatch": {
+        "type": "object",
+        "properties": {
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "descriptionRu": { "type": "string", "maxLength": 10000 },
+          "descriptionKk": { "type": "string", "maxLength": 10000 },
+          "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+          "priceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" },
+          "isActive": { "type": "boolean" }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "PublicDoctor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "bioRu": { "type": "string", "maxLength": 10000 },
+          "bioKk": { "type": "string", "maxLength": 10000 },
+          "photoAssetKey": {
+            "anyOf": [
+              { "type": "string", "pattern": "^doctors\\/[a-z0-9-]+\\.(?:webp|avif|png|jpg)$" },
+              { "type": "null" }
+            ]
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "slug": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                },
+                "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+                "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+                "descriptionRu": { "type": "string", "maxLength": 10000 },
+                "descriptionKk": { "type": "string", "maxLength": 10000 },
+                "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+                "priceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" }
+              },
+              "required": [
+                "id",
+                "slug",
+                "nameRu",
+                "nameKk",
+                "descriptionRu",
+                "descriptionKk",
+                "durationMinutes",
+                "priceKzt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "nameRu",
+          "nameKk",
+          "specialtyRu",
+          "specialtyKk",
+          "bioRu",
+          "bioKk",
+          "photoAssetKey",
+          "services"
+        ],
+        "additionalProperties": false
+      },
+      "AdminDoctor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "specialtyKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "bioRu": { "type": "string", "maxLength": 10000 },
+          "bioKk": { "type": "string", "maxLength": 10000 },
+          "photoAssetKey": {
+            "anyOf": [
+              { "type": "string", "pattern": "^doctors\\/[a-z0-9-]+\\.(?:webp|avif|png|jpg)$" },
+              { "type": "null" }
+            ]
+          },
+          "isActive": { "type": "boolean" },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "isActive": { "type": "boolean" },
+                "service": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "slug": {
+                      "type": "string",
+                      "maxLength": 100,
+                      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    },
+                    "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+                    "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+                    "descriptionRu": { "type": "string", "maxLength": 10000 },
+                    "descriptionKk": { "type": "string", "maxLength": 10000 },
+                    "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+                    "priceKzt": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$"
+                    },
+                    "isActive": { "type": "boolean" }
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "nameRu",
+                    "nameKk",
+                    "descriptionRu",
+                    "descriptionKk",
+                    "durationMinutes",
+                    "priceKzt",
+                    "isActive"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["isActive", "service"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "nameRu",
+          "nameKk",
+          "specialtyRu",
+          "specialtyKk",
+          "bioRu",
+          "bioKk",
+          "photoAssetKey",
+          "isActive",
+          "services"
+        ],
+        "additionalProperties": false
+      },
+      "PublicService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "descriptionRu": { "type": "string", "maxLength": 10000 },
+          "descriptionKk": { "type": "string", "maxLength": 10000 },
+          "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+          "priceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" }
+        },
+        "required": [
+          "id",
+          "slug",
+          "nameRu",
+          "nameKk",
+          "descriptionRu",
+          "descriptionKk",
+          "durationMinutes",
+          "priceKzt"
+        ],
+        "additionalProperties": false
+      },
+      "AdminService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "nameRu": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "nameKk": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "descriptionRu": { "type": "string", "maxLength": 10000 },
+          "descriptionKk": { "type": "string", "maxLength": 10000 },
+          "durationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+          "priceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" },
+          "isActive": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "slug",
+          "nameRu",
+          "nameKk",
+          "descriptionRu",
+          "descriptionKk",
+          "durationMinutes",
+          "priceKzt",
+          "isActive"
+        ],
+        "additionalProperties": false
+      },
+      "AssignmentInput": {
+        "type": "object",
+        "properties": { "isActive": { "type": "boolean" } },
+        "required": ["isActive"],
+        "additionalProperties": false
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "doctorId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "isActive": { "type": "boolean" }
+        },
+        "required": ["doctorId", "serviceId", "isActive"],
+        "additionalProperties": false
+      },
+      "StaffCreate": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "role": { "type": "string", "enum": ["ADMIN", "RECEPTIONIST"] }
+        },
+        "required": ["email", "role"],
+        "additionalProperties": false
+      },
+      "StaffPatch": {
+        "type": "object",
+        "properties": {
+          "role": { "type": "string", "enum": ["ADMIN", "RECEPTIONIST"] },
+          "isActive": { "type": "boolean" }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "Staff": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "role": { "type": "string", "enum": ["ADMIN", "RECEPTIONIST"] },
+          "isActive": { "type": "boolean" },
+          "mfaEnabled": { "type": "boolean" }
+        },
+        "required": ["id", "email", "role", "isActive", "mfaEnabled"],
+        "additionalProperties": false
+      },
+      "Audit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "action": { "type": "string" },
+          "entityType": { "type": "string" },
+          "entityId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              { "type": "null" }
+            ]
+          },
+          "actorUserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              { "type": "null" }
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "fields": {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "nameRu",
+                    "nameKk",
+                    "specialtyRu",
+                    "specialtyKk",
+                    "bioRu",
+                    "bioKk",
+                    "photoAssetKey",
+                    "isActive",
+                    "descriptionRu",
+                    "descriptionKk",
+                    "priceKzt",
+                    "durationMinutes",
+                    "services",
+                    "role"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "entityType",
+          "entityId",
+          "actorUserId",
+          "requestId",
+          "createdAt",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "PublicDoctorPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/PublicDoctor" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "AdminDoctorPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AdminDoctor" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "PublicServicePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/PublicService" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "AdminServicePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AdminService" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "StaffPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Staff" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "AuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Audit" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-clinic_session",
+        "description": "HttpOnly Secure SameSite=Lax Path=/; opaque random token, never returned in JSON. TTL challenge 5m; authenticated 8h, idle 30m."
+      },
+      "CsrfNonce": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-clinic_csrf",
+        "description": "HttpOnly Secure nonce cookie from GET /auth/csrf."
+      },
+      "CsrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Session-bound HMAC value returned by GET /auth/csrf."
+      }
+    }
+  }
+}

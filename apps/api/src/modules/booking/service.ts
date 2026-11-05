@@ -2,6 +2,11 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import { Prisma, type PrismaClient } from '../../generated/prisma/client.js';
 import { BookingError } from './errors.js';
 import {
+  updateDoctorLocked,
+  updateServiceLocked,
+  setAssignmentLocked,
+} from './catalog-mutations.js';
+import {
   bookingSchema,
   moveSchema,
   parse,
@@ -437,8 +442,7 @@ export class BookingService {
     const id = parse(uuid, idInput);
     if (typeof active !== 'boolean') throw new BookingError('INVALID_INPUT');
     return withTransaction(this.client, async (tx) => {
-      await lockDoctors(tx, [id]);
-      await tx.doctor.update({ where: { id }, data: { isActive: active } });
+      await updateDoctorLocked(tx, id, { isActive: active });
     });
   }
 
@@ -447,12 +451,7 @@ export class BookingService {
     const serviceId = parse(uuid, serviceInput);
     if (typeof active !== 'boolean') throw new BookingError('INVALID_INPUT');
     return withTransaction(this.client, async (tx) => {
-      await lockDoctors(tx, [doctorId]);
-      await lockServices(tx, [serviceId]);
-      await tx.doctorService.update({
-        where: { doctorId_serviceId: { doctorId, serviceId } },
-        data: { isActive: active },
-      });
+      await setAssignmentLocked(tx, doctorId, serviceId, active);
     });
   }
 
@@ -460,16 +459,12 @@ export class BookingService {
     const { serviceId, ...change } = parse(serviceChangeSchema, input);
     if (!Object.keys(change).length) throw new BookingError('INVALID_INPUT');
     return withTransaction(this.client, async (tx) => {
-      await lockServices(tx, [serviceId]);
-      await tx.service.update({
-        where: { id: serviceId },
-        data: {
-          ...(change.priceKzt !== undefined ? { priceKzt: change.priceKzt } : {}),
-          ...(change.durationMinutes !== undefined
-            ? { durationMinutes: change.durationMinutes }
-            : {}),
-          ...(change.isActive !== undefined ? { isActive: change.isActive } : {}),
-        },
+      await updateServiceLocked(tx, serviceId, {
+        ...(change.priceKzt !== undefined ? { priceKzt: change.priceKzt } : {}),
+        ...(change.durationMinutes !== undefined
+          ? { durationMinutes: change.durationMinutes }
+          : {}),
+        ...(change.isActive !== undefined ? { isActive: change.isActive } : {}),
       });
     });
   }

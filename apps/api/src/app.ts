@@ -3,13 +3,16 @@ import express from 'express';
 import helmet from 'helmet';
 import type { HealthResponse } from '@clinic/contracts';
 import { createErrorHandler, HttpError } from './middleware/errors.js';
+import { securityRouter } from './modules/security/router.js';
+import type { AuthService } from './modules/security/service.js';
 
 interface AppDependencies {
   database: { ping(): Promise<void> };
   reportUnexpected?: (requestId: string) => void;
+  security?: AuthService;
 }
 
-export function createApp({ database, reportUnexpected = () => {} }: AppDependencies) {
+export function createApp({ database, security, reportUnexpected = () => {} }: AppDependencies) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', false);
@@ -36,6 +39,7 @@ export function createApp({ database, reportUnexpected = () => {} }: AppDependen
     response.json(body);
   });
 
+  if (security) app.use('/api/v1', securityRouter(security));
   app.use((_request, _response, next) => {
     next(new HttpError(404, 'NOT_FOUND', 'Ресурс не найден'));
   });

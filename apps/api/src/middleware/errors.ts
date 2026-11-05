@@ -1,5 +1,7 @@
 import type { ErrorRequestHandler } from 'express';
 import type { ApiErrorResponse } from '@clinic/contracts';
+import { AccessError } from '../modules/security/errors.js';
+import { BookingError } from '../modules/booking/errors.js';
 
 export class HttpError extends Error {
   constructor(
@@ -29,6 +31,31 @@ export function createErrorHandler(
     let safeError: HttpError;
     if (error instanceof HttpError) {
       safeError = error;
+    } else if (error instanceof AccessError) {
+      safeError = new HttpError(
+        error.status,
+        error.code,
+        error.status === 401 ? 'Не удалось подтвердить доступ' : 'Запрос не может быть выполнен',
+      );
+    } else if (error instanceof BookingError) {
+      const status = error.code.endsWith('NOT_FOUND')
+        ? 404
+        : [
+              'DUPLICATE_RESOURCE',
+              'SLOT_UNAVAILABLE',
+              'SCHEDULE_OVERLAP',
+              'VERSION_CONFLICT',
+              'SCHEDULE_HAS_APPOINTMENTS',
+              'OFFER_CHANGED',
+              'CONSENT_CHANGED',
+              'IDEMPOTENCY_CONFLICT',
+              'IDEMPOTENCY_EXPIRED',
+            ].includes(error.code)
+          ? 409
+          : error.code === 'CONCURRENCY_RETRY_EXHAUSTED'
+            ? 503
+            : 400;
+      safeError = new HttpError(status, error.code, 'Запрос не может быть выполнен');
     } else if (bodyErrorType(error) === 'entity.parse.failed') {
       safeError = new HttpError(400, 'INVALID_JSON', 'Некорректный JSON');
     } else if (bodyErrorType(error) === 'entity.too.large') {

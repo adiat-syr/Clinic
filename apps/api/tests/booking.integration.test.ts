@@ -56,7 +56,7 @@ const workingWindow = {
 beforeEach(async () => {
   clock = new Date(now);
   // Static table names; URL was checked above. Never run against the application DB.
-  await client.$executeRaw`TRUNCATE TABLE audit_events, idempotency_keys, appointment_consents,
+  await client.$executeRaw`TRUNCATE TABLE bootstrap_state, rate_limit_buckets, audit_events, idempotency_keys, appointment_consents,
     appointments, availability_windows, doctor_services, doctors, services, staff_sessions,
     staff_users, consent_documents`;
   await seedSyntheticClinic(client, new Date('2030-01-02T00:00:00Z'), now);
@@ -110,16 +110,20 @@ async function rawInsert(
 }
 
 describe('migration invariants, inspected directly in PostgreSQL', () => {
-  it('contains all 11 tables, manual constraints, FK indexes and deferred consent trigger after repeat deploy', async () => {
+  it('contains all 13 tables, manual constraints, FK indexes and deferred consent trigger after repeat deploy', async () => {
     const tables = await sql.query<{ tablename: string }>(
       "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename <> '_prisma_migrations'",
     );
-    expect(tables.rowCount).toBe(11);
+    expect(tables.rowCount).toBe(13);
     const constraints = await sql.query<{ conname: string; contype: string }>(
-      `SELECT conname,contype FROM pg_constraint WHERE conname IN ('appointments_no_overlap','availability_no_overlap','appointment_contacts','appointment_valid_interval','services_valid_offer')`,
+      `SELECT conname,contype FROM pg_constraint WHERE conname IN ('appointments_no_overlap','availability_no_overlap','appointment_contacts','appointment_valid_interval','services_valid_offer','bootstrap_singleton','rate_limit_valid')`,
     );
     expect(constraints.rows.filter((row) => row.contype === 'x')).toHaveLength(2);
-    expect(constraints.rowCount).toBe(5);
+    expect(constraints.rowCount).toBe(7);
+    const securityTriggers = await sql.query(
+      "SELECT tgname FROM pg_trigger WHERE NOT tgisinternal AND tgname IN ('staff_security_revokes_sessions','bootstrap_marker_immutable')",
+    );
+    expect(securityTriggers.rowCount).toBe(2);
     const trigger = await sql.query<{ tgdeferrable: boolean; tginitdeferred: boolean }>(
       "SELECT tgdeferrable,tginitdeferred FROM pg_trigger WHERE tgname='appointment_requires_consent'",
     );
@@ -181,6 +185,21 @@ describe('migration invariants, inspected directly in PostgreSQL', () => {
   });
 
   it('enforces offer, contacts, MFA/email and immutable consent/audit constraints in SQL', async () => {
+    await expect(
+      sql.query('INSERT INTO bootstrap_state (id,admin_user_id) VALUES (false,$1)', [ids.staff]),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'bootstrap_singleton' });
+    await expect(
+      sql.query(
+        'INSERT INTO rate_limit_buckets (key_hash,attempts,resets_at) VALUES ($1,0,now())',
+        ['a'.repeat(64)],
+      ),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'rate_limit_valid' });
+    await expect(
+      sql.query(
+        "INSERT INTO rate_limit_buckets (key_hash,attempts,resets_at) VALUES ($1,1,'infinity')",
+        ['a'.repeat(64)],
+      ),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'rate_limit_valid' });
     await expect(
       sql.query('UPDATE services SET duration_minutes=0 WHERE id=$1', [ids.services[0]]),
     ).rejects.toMatchObject({ code: '23514' });

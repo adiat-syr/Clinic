@@ -73,10 +73,21 @@ try {
   assert.equal(health.status, 'ok');
   const readyResponse = await waitFor(`${webUrl}/api/v1/health/ready`);
   assert.equal(healthResponseSchema.parse(await readyResponse.json()).status, 'ready');
+  const catalogResponse = await waitFor(`${webUrl}/api/v1/services`);
+  const catalog = await catalogResponse.json();
+  assert.ok(Array.isArray(catalog.items) && catalog.items.length > 0);
+  assert.equal(catalogResponse.headers.get('cache-control'), 'no-store');
+  assert.ok(
+    catalog.items.every(
+      (service) => typeof service.priceKzt === 'string' && !('isActive' in service),
+    ),
+  );
+  const denied = await fetch(`${webUrl}/api/v1/admin/doctors`);
+  assert.equal(denied.status, 401);
   const builtHtml = await readFile(new URL('apps/web/dist/index.html', root), 'utf8');
   assert.doesNotMatch(builtHtml, /fonts\.googleapis|cdn\.tailwindcss|googleusercontent/);
   console.log(
-    'PASS: compiled API, Vite page, dev proxy, PostgreSQL readiness, local build assets.',
+    'PASS: compiled API, Vite page, dev proxy, PostgreSQL readiness, public catalogue, admin 401, local build assets.',
   );
 } catch (error) {
   console.error(error instanceof Error ? error.message : 'Smoke failed');

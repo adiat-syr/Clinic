@@ -1,6 +1,9 @@
 import { createApp } from './app.js';
 import { ConfigurationError, parseEnvironment } from './config/env.js';
 import { createDatabase } from './infrastructure/database.js';
+import { createPrisma } from './infrastructure/prisma.js';
+import { parseSecurityEnvironment } from './modules/security/config.js';
+import { AuthService } from './modules/security/service.js';
 
 function logEvent(level: 'info' | 'error', event: string, requestId?: string) {
   const output = JSON.stringify({ level, event, ...(requestId ? { requestId } : {}) });
@@ -10,11 +13,16 @@ function logEvent(level: 'info' | 'error', event: string, requestId?: string) {
 
 try {
   const config = parseEnvironment(process.env);
+  const securityConfig = parseSecurityEnvironment(process.env);
+  const prisma = createPrisma(config.DATABASE_URL);
+  const security = new AuthService(prisma, securityConfig);
+  await security.ready();
   const database = createDatabase(config.DATABASE_URL, () =>
     logEvent('error', 'database_pool_error'),
   );
   const app = createApp({
     database,
+    security,
     reportUnexpected: (requestId) => logEvent('error', 'unexpected_request_error', requestId),
   });
   const server = app.listen(config.API_PORT, config.API_HOST, () => {
@@ -34,7 +42,7 @@ try {
     deadline.unref();
     server.closeIdleConnections();
     server.close(() => {
-      void database.close().then(
+      void Promise.all([database.close(), prisma.$disconnect()]).then(
         () => {
           clearTimeout(deadline);
           logEvent('info', 'shutdown_complete');
@@ -53,7 +61,7 @@ try {
   server.on('error', () => {
     logEvent('error', 'listen_failed');
     process.exitCode = 1;
-    void database.close();
+    void Promise.all([database.close(), prisma.$disconnect()]);
   });
 } catch (error) {
   if (error instanceof ConfigurationError) {
