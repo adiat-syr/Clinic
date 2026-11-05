@@ -10,6 +10,28 @@ import { writeAudit } from '../security/repository.js';
 import { withTransaction, type Transaction } from './transaction.js';
 import { lockDoctors, lockServices, lockAppointment, safeAppointment } from './repository.js';
 
+const appointmentLabelsInclude = {
+  doctorService: {
+    select: {
+      doctor: { select: { nameRu: true, nameKk: true } },
+      service: { select: { nameRu: true, nameKk: true } },
+    },
+  },
+};
+function appointmentLabels(row: {
+  doctorService: {
+    doctor: { nameRu: string; nameKk: string };
+    service: { nameRu: string; nameKk: string };
+  };
+}) {
+  return {
+    doctorNameRu: row.doctorService.doctor.nameRu,
+    doctorNameKk: row.doctorService.doctor.nameKk,
+    serviceNameRu: row.doctorService.service.nameRu,
+    serviceNameKk: row.doctorService.service.nameKk,
+  };
+}
+
 export const publicBookingSchema = selectionSchema.extend({
   contacts: contactsSchema,
   consent: z.strictObject({
@@ -182,6 +204,7 @@ export class BookingHttpService {
     const [rows, total] = await Promise.all([
       tx.appointment.findMany({
         where,
+        include: appointmentLabelsInclude,
         orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
@@ -190,13 +213,16 @@ export class BookingHttpService {
     ]);
     await writeAudit(tx, 'APPOINTMENTS_READ', 'appointment', null, requestId, actor);
     return {
-      items: rows.map(safeAppointment),
+      items: rows.map((row) => ({ ...safeAppointment(row), ...appointmentLabels(row) })),
       pagination: { page: q.page, pageSize: q.pageSize, total },
     };
   }
   async appointment(tx: Transaction, idInput: unknown, actor: string, requestId: string) {
     const id = validated(uuid, idInput),
-      row = await tx.appointment.findUnique({ where: { id }, include: { consent: true } });
+      row = await tx.appointment.findUnique({
+        where: { id },
+        include: { consent: true, ...appointmentLabelsInclude },
+      });
     if (!row) throw new AccessError(404, 'NOT_FOUND');
     await writeAudit(tx, 'APPOINTMENT_CONTACTS_READ', 'appointment', id, requestId, actor);
     const contacts =
@@ -208,6 +234,7 @@ export class BookingHttpService {
         : null;
     return {
       ...safeAppointment(row),
+      ...appointmentLabels(row),
       contacts,
       consent: row.consent
         ? {

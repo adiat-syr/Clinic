@@ -24,6 +24,7 @@ export interface StaffIdentity {
 }
 interface SessionOptions {
   requestId: string;
+  touch?: boolean;
   roles?: StaffRole[];
   challenge?: boolean;
   staffTargets?: string[];
@@ -79,7 +80,8 @@ export class AuthService {
         throw new AccessError(401, 'UNAUTHORIZED');
       if (options.roles && !options.roles.includes(session.user.role))
         throw new AccessError(403, 'FORBIDDEN');
-      await tx.staffSession.update({ where: { id: session.id }, data: { lastSeenAt: now } });
+      if (options.touch !== false)
+        await tx.staffSession.update({ where: { id: session.id }, data: { lastSeenAt: now } });
       return work(
         tx,
         { id: session.user.id, email: session.user.email, role: session.user.role },
@@ -192,7 +194,7 @@ export class AuthService {
   }
 
   me(raw: string | null, requestId: string) {
-    return this.withSession(raw, { requestId }, async (_tx, actor) => actor);
+    return this.withSession(raw, { requestId, touch: false }, async (_tx, actor) => actor);
   }
   logout(raw: string | null, requestId: string) {
     return this.withSession(raw, { requestId, challenge: true }, async (tx, actor, sessionId) => {

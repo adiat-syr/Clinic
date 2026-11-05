@@ -210,6 +210,24 @@ async function createBooking(
   return browser.send('POST', '/appointments', data, { headers: { 'idempotency-key': key } });
 }
 describe('stage 4 HTTP booking and protected workflows', () => {
+  it('staff retains readable catalogue labels after entities are archived', async () => {
+    await createBooking(new Client());
+    const row = await db.appointment.findFirstOrThrow();
+    await db.doctor.update({ where: { id: row.doctorId }, data: { isActive: false } });
+    await db.service.update({ where: { id: row.serviceId }, data: { isActive: false } });
+    const reception = await logged('RECEPTIONIST');
+    const detail = await json(await reception.send('GET', `/admin/appointments/${row.id}`));
+    expect(detail.doctorNameRu).toBeTruthy();
+    expect(detail.serviceNameRu).toBeTruthy();
+    const response = await reception.send(
+      'GET',
+      '/admin/appointments?from=2030-01-01T00:00:00Z&to=2030-01-03T00:00:00Z',
+    );
+    const data = z
+      .object({ items: z.array(z.object({ doctorNameRu: z.string(), serviceNameRu: z.string() })) })
+      .parse(await response.json());
+    expect(data.items).toHaveLength(1);
+  });
   it('creates, lists, rejects overlaps and deletes working windows through staff API', async () => {
     const staff = await logged('RECEPTIONIST'),
       data = {

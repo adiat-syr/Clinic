@@ -80,7 +80,7 @@ export async function request(path: string, init: RequestInit = {}) {
     }
     throw new ApiError(code, response.status);
   }
-  return response.json() as Promise<unknown>;
+  return response.status === 204 ? null : (response.json() as Promise<unknown>);
 }
 export async function services(signal?: AbortSignal) {
   return allPages('/services', serviceSchema, signal);

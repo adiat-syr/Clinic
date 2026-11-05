@@ -288,6 +288,19 @@ describe('bootstrap and credential boundaries', () => {
 });
 
 describe('real HTTP authentication, MFA, sessions and CSRF', () => {
+  it('session status checks do not keep an idle session alive', async () => {
+    const browser = await logged();
+    const before = await db.staffSession.findUniqueOrThrow({
+      where: { tokenHash: hashToken(browser.session()) },
+    });
+    advance(29 * 60000);
+    expect((await browser.send('GET', '/auth/me')).status).toBe(200);
+    expect(
+      (await db.staffSession.findUniqueOrThrow({ where: { id: before.id } })).lastSeenAt,
+    ).toEqual(before.lastSeenAt);
+    advance(60001);
+    expect((await browser.send('GET', '/auth/me')).status).toBe(401);
+  });
   it('revoked challenges cannot consume another live challenge account quota', async () => {
     const stale = new Client();
     await challenge(stale);

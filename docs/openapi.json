@@ -5058,7 +5058,11 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          }
+          },
+          "doctorNameRu": { "type": "string" },
+          "doctorNameKk": { "type": "string" },
+          "serviceNameRu": { "type": "string" },
+          "serviceNameKk": { "type": "string" }
         },
         "required": [
           "reference",
@@ -5122,6 +5126,10 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "doctorNameRu": { "type": "string" },
+          "doctorNameKk": { "type": "string" },
+          "serviceNameRu": { "type": "string" },
+          "serviceNameKk": { "type": "string" },
           "contacts": {
             "anyOf": [
               {
@@ -5234,7 +5242,11 @@
                   "type": "integer",
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
-                }
+                },
+                "doctorNameRu": { "type": "string" },
+                "doctorNameKk": { "type": "string" },
+                "serviceNameRu": { "type": "string" },
+                "serviceNameKk": { "type": "string" }
               },
               "required": [
                 "reference",

@@ -35,3 +35,7 @@ OpenAPI: `docs/openapi.json`, генератор `npm run openapi:generate`, п�
 Шифрование прикладное: envelope v1 (`version byte / nonce / tag / ciphertext`), purpose+key version в AAD, nonce случайный для каждого поля. Проверяются подмена purpose, повреждение и отсутствие ключа. В public ответах нет контактов/внутреннего appointment id; технический reference не предоставляет прав чтения. Анонимизированная историческая запись в staff-карточке имеет contacts=null.
 
 Физическая очистка, утверждённый retention/регламент отзыва, KZ-инфраструктура, применимость криптосредств, operator identity recovery, TLS/proxy, нагрузка/backup/restore остаются обязательными до production. Здесь только локальные синтетические сценарии; интерфейс этапа 5 не реализован.
+
+## Дополнение этапа 6: названия в защищённой очереди
+
+GET /admin/appointments и GET /admin/appointments/:id дополнительно возвращают doctorNameRu, doctorNameKk, serviceNameRu, serviceNameKk через существующую связь doctorService. Это текущие названия каталога, доступные после архивации; они не являются историческими snapshots имени. В OpenAPI поля optional для совместимости общего summary с ответами изменения статуса. Список не получает контакты; расшифровка и audit чтения остаются только в карточке. Роли и транзакции не изменены. Public API и ограничения PostgreSQL остаются прежними.

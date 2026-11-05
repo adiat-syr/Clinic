@@ -1,3 +1,4 @@
+import { AdminEntry } from './admin/Entry';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ if (snapshot?.textContent) {
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      {location.pathname.startsWith('/admin') ? <AdminEntry /> : <App />}
     </QueryClientProvider>
   </React.StrictMode>,
 );

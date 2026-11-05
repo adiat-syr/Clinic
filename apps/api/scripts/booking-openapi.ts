@@ -31,7 +31,15 @@ export function bookingOpenApi() {
     durationMinutes: z.number().int(),
   };
   const publicResult = z.strictObject(fields),
-    summary = z.strictObject({ ...fields, id, version: z.number().int() });
+    summary = z.strictObject({
+      ...fields,
+      id,
+      version: z.number().int(),
+      doctorNameRu: z.string().optional(),
+      doctorNameKk: z.string().optional(),
+      serviceNameRu: z.string().optional(),
+      serviceNameKk: z.string().optional(),
+    });
   const pagination = z.strictObject({ page: z.number(), pageSize: z.number(), total: z.number() });
   const window = z.strictObject({
     id,

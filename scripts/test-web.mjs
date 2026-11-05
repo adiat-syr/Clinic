@@ -1,4 +1,5 @@
-import { randomUUID } from 'node:crypto';
+import * as OTPAuth from 'otpauth';
+import { randomUUID, randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
@@ -35,6 +36,8 @@ const apiPort = await port(),
     TEST_DATABASE_URL: target.href,
     API_PORT: String(apiPort),
     AUTH_ORIGIN: `http://127.0.0.1:${webPort}`,
+    WEB_STAFF_PASSWORD: randomBytes(32).toString('base64url'),
+    WEB_STAFF_MFA: new OTPAuth.Secret({ size: 20 }).base32,
     WEB_TEST_BASE: `http://127.0.0.1:${webPort}`,
     WEB_TEST_DATE: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   };
@@ -74,6 +77,7 @@ try {
     'apps/api/prisma.config.ts',
   ]);
   await run(['--import', 'tsx', 'apps/api/prisma/seed.ts']);
+  await run(['--import', 'tsx', 'scripts/seed-web-staff.ts']);
   start(['apps/api/dist/server.js']);
   await ready(`http://127.0.0.1:${apiPort}/api/v1/health/ready`);
   start(
