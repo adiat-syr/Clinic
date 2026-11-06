@@ -4,6 +4,8 @@ import {
   appointmentCommand,
   withdrawalSchema,
   windowSchema,
+  patientConsentSchema,
+  staffBookingSchema,
 } from '../src/modules/booking/http-service.js';
 export function bookingOpenApi() {
   const schemas: Record<string, unknown> = {};
@@ -12,6 +14,8 @@ export function bookingOpenApi() {
     AppointmentCommand: appointmentCommand,
     WithdrawalInput: withdrawalSchema,
     WindowInput: windowSchema,
+    PatientConsentInput: patientConsentSchema,
+    StaffBookingInput: staffBookingSchema,
   })) {
     const s = z.toJSONSchema(value, { io: 'input' });
     delete s.$schema;
@@ -29,6 +33,16 @@ export function bookingOpenApi() {
     endsAt: instant,
     priceKzt: z.string(),
     durationMinutes: z.number().int(),
+  };
+  schemas.PatientConsentCode = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['code', 'expiresAt', 'documentVersion'],
+    properties: {
+      code: { type: 'string', pattern: '^[a-f0-9]{32}$' },
+      expiresAt: { type: 'string', format: 'date-time' },
+      documentVersion: { type: 'string' },
+    },
   };
   const publicResult = z.strictObject(fields),
     summary = z.strictObject({
@@ -122,7 +136,8 @@ export function bookingOpenApi() {
       [code]: out ? response(out) : { description: 'Completed' },
     };
     for (const c of [400, 401, 403, 404, 409, 413, 429, 500, 503]) responses[c] = response('Error');
-    if (operationId === 'createAppointment') responses[200] = response('BookingResult');
+    if (operationId === 'createAppointment' || operationId === 'createStaffAppointment')
+      responses[200] = response('BookingResult');
     return {
       operationId,
       description: `${roles.length ? roles.join(' or ') + ' with full MFA. ' : ''}Strict DTO/query fields; no-store; range ≤31 days. Public booking requires Idempotency-Key; callbacks use existing transactional core.`,
@@ -138,6 +153,17 @@ export function bookingOpenApi() {
   }
   const staff = ['ADMIN', 'RECEPTIONIST'];
   const paths = {
+    '/patient-consent-codes': {
+      post: op(
+        'issuePatientConsentCode',
+        'post',
+        'PatientConsentCode',
+        'PatientConsentInput',
+        [],
+        [],
+        201,
+      ),
+    },
     '/appointments': {
       post: op(
         'createAppointment',
@@ -174,6 +200,15 @@ export function bookingOpenApi() {
       ),
     },
     '/admin/appointments': {
+      post: op(
+        'createStaffAppointment',
+        'post',
+        'BookingResult',
+        'StaffBookingInput',
+        staff,
+        [param('Idempotency-Key', { type: 'string', pattern: '^[a-fA-F0-9]{32,128}$' }, 'header')],
+        201,
+      ),
       get: op('listAppointments', 'get', 'AppointmentPage', undefined, staff, [
         ...range,
         param(

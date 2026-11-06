@@ -3260,6 +3260,86 @@
         ]
       }
     },
+    "/patient-consent-codes": {
+      "post": {
+        "operationId": "issuePatientConsentCode",
+        "description": "Strict DTO/query fields; no-store; range ≤31 days. Public booking requires Idempotency-Key; callbacks use existing transactional core.",
+        "security": [{ "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          { "name": "Origin", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PatientConsentInput" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PatientConsentCode" }
+              }
+            }
+          },
+          "400": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
     "/appointments": {
       "post": {
         "operationId": "createAppointment",
@@ -3519,6 +3599,94 @@
       }
     },
     "/admin/appointments": {
+      "post": {
+        "operationId": "createStaffAppointment",
+        "description": "ADMIN or RECEPTIONIST with full MFA. Strict DTO/query fields; no-store; range ≤31 days. Public booking requires Idempotency-Key; callbacks use existing transactional core.",
+        "security": [{ "SessionCookie": [], "CsrfHeader": [], "CsrfNonce": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{32,128}$" }
+          },
+          { "name": "Origin", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/StaffBookingInput" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BookingResult" } }
+            }
+          },
+          "201": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BookingResult" } }
+            }
+          },
+          "400": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Success; no-store",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
       "get": {
         "operationId": "listAppointments",
         "description": "ADMIN or RECEPTIONIST with full MFA. Strict DTO/query fields; no-store; range ≤31 days. Public booking requires Idempotency-Key; callbacks use existing transactional core.",
@@ -4959,6 +5127,83 @@
         },
         "required": ["doctorId", "startsAt", "endsAt"],
         "additionalProperties": false
+      },
+      "PatientConsentInput": {
+        "type": "object",
+        "properties": {
+          "contacts": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 120,
+                "pattern": "^[\\p{L}\\p{M} '-]+$"
+              },
+              "phone": { "type": "string", "maxLength": 32 }
+            },
+            "required": ["name", "phone"],
+            "additionalProperties": false
+          },
+          "consent": {
+            "type": "object",
+            "properties": {
+              "documentId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "accepted": { "type": "boolean", "const": true },
+              "locale": { "type": "string", "enum": ["ru", "kk"] }
+            },
+            "required": ["documentId", "accepted", "locale"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["contacts", "consent"],
+        "additionalProperties": false
+      },
+      "StaffBookingInput": {
+        "type": "object",
+        "properties": {
+          "doctorId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "expectedPriceKzt": { "type": "string", "pattern": "^(0|[1-9]\\d{0,9})(\\.\\d{1,2})?$" },
+          "expectedDurationMinutes": { "type": "integer", "minimum": 1, "maximum": 1440 },
+          "consentCode": { "type": "string", "pattern": "^[a-f0-9]{32}$" }
+        },
+        "required": [
+          "doctorId",
+          "serviceId",
+          "startsAt",
+          "expectedPriceKzt",
+          "expectedDurationMinutes",
+          "consentCode"
+        ],
+        "additionalProperties": false
+      },
+      "PatientConsentCode": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "expiresAt", "documentVersion"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "documentVersion": { "type": "string" }
+        }
       },
       "BookingResult": {
         "type": "object",

@@ -1,3 +1,4 @@
+import { translate as t } from './i18n';
 import { useLoad } from './useLoad';
 import { useState } from 'react';
 import { adminRequest, staffSchema, pageSchema, message, type Identity } from './api';
@@ -22,10 +23,11 @@ export function Staff({ me }: { me: Identity }) {
   );
   return (
     <>
-      <h1>Сотрудники и доступ</h1>
+      <h1>{t('Сотрудники и доступ')}</h1>
       <p>
-        Новый аккаунт неактивен. Пароль и MFA выдаёт оператор через staff:credentials. HTTP не
-        передаёт секреты.
+        {t(
+          'Новый аккаунт неактивен. Пароль и MFA выдаёт оператор через staff:credentials. HTTP не передаёт секреты.',
+        )}
       </p>
       <LoadState {...rows} retry={rows.refresh} />
       <section className="panel">
@@ -34,10 +36,10 @@ export function Staff({ me }: { me: Identity }) {
             <thead>
               <tr>
                 <th>Email</th>
-                <th>Роль</th>
-                <th>Доступ</th>
+                <th>{t('Роль')}</th>
+                <th>{t('Доступ')}</th>
                 <th>MFA</th>
-                <th>Действия</th>
+                <th>{t('Действия')}</th>
               </tr>
             </thead>
             <tbody>
@@ -45,7 +47,7 @@ export function Staff({ me }: { me: Identity }) {
                 <tr key={s.id}>
                   <td>
                     {s.email}
-                    {s.id === me.id ? ' (вы)' : ''}
+                    {s.id === me.id ? t(' (вы)') : ''}
                   </td>
                   <td>
                     {s.role}
@@ -58,21 +60,21 @@ export function Staff({ me }: { me: Identity }) {
                         })
                       }
                     >
-                      Изменить роль
+                      {t('Изменить роль')}
                     </button>
                   </td>
-                  <td>{s.isActive ? 'Активен' : 'Заблокирован'}</td>
-                  <td>{s.mfaEnabled ? 'Подключён' : 'Не выдан'}</td>
+                  <td>{s.isActive ? t('Активен') : t('Заблокирован')}</td>
+                  <td>{s.mfaEnabled ? t('Подключён') : t('Не выдан')}</td>
                   <td>
                     <button
                       onClick={() =>
                         setCommand({ id: s.id, action: 'isActive', value: !s.isActive })
                       }
                     >
-                      {s.isActive ? 'Заблокировать' : 'Включить доступ'}
+                      {s.isActive ? t('Заблокировать') : t('Включить доступ')}
                     </button>
                     <button onClick={() => setCommand({ id: s.id, action: 'revoke' })}>
-                      Отозвать сессии
+                      {t('Отозвать сессии')}
                     </button>
                   </td>
                 </tr>
@@ -97,13 +99,13 @@ export function Staff({ me }: { me: Identity }) {
             .finally(() => setBusy(false));
         }}
       >
-        <h2>Создать неактивного сотрудника</h2>
+        <h2>{t('Создать неактивного сотрудника')}</h2>
         <label>
-          Email нового сотрудника
+          {t('Email нового сотрудника')}
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label>
-          Роль нового сотрудника
+          {t('Роль нового сотрудника')}
           <select value={role} onChange={(e) => setRole(e.target.value)}>
             <option value="RECEPTIONIST">RECEPTIONIST</option>
             <option value="ADMIN">ADMIN</option>
@@ -111,12 +113,12 @@ export function Staff({ me }: { me: Identity }) {
         </label>
         {error && <p role="alert">{error}</p>}
         <button className="button" disabled={busy}>
-          Создать аккаунт
+          {t('Создать аккаунт')}
         </button>
       </form>
       {command && (
         <Confirm
-          title="Изменить доступ сотрудника?"
+          title={t('Изменить доступ сотрудника?')}
           onClose={() => setCommand(null)}
           onConfirm={async () => {
             await adminRequest(
@@ -132,8 +134,9 @@ export function Staff({ me }: { me: Identity }) {
           }}
         >
           <p>
-            Изменение роли, блокировка и отзыв немедленно закрывают текущие сессии. Последний ADMIN
-            защищён сервером. Убедитесь, что выбран правильный аккаунт.
+            {t(
+              'Изменение роли, блокировка и отзыв немедленно закрывают текущие сессии. Последний ADMIN защищён сервером. Убедитесь, что выбран правильный аккаунт.',
+            )}
           </p>
         </Confirm>
       )}

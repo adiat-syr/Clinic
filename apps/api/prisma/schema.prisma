@@ -156,6 +156,7 @@ model Appointment {
   createdAt               DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt               DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
   consent                 AppointmentConsent?
+  patientConsentReceipt   PatientConsentReceipt?
   idempotencyKeys         IdempotencyKey[]
 
   @@index([doctorId, startsAt])
@@ -174,8 +175,29 @@ model ConsentDocument {
   publishedAt   DateTime             @default(now()) @map("published_at") @db.Timestamptz(3)
   retiredAt     DateTime?            @map("retired_at") @db.Timestamptz(3)
   consents      AppointmentConsent[]
+  receipts      PatientConsentReceipt[]
 
   @@map("consent_documents")
+}
+
+model PatientConsentReceipt {
+  codeHash              String          @id @map("code_hash") @db.Char(64)
+  documentId            String          @map("document_id") @db.Uuid
+  document              ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  locale                Locale
+  acceptedAt            DateTime        @map("accepted_at") @db.Timestamptz(3)
+  expiresAt             DateTime        @map("expires_at") @db.Timestamptz(3)
+  patientNameCiphertext Bytes           @map("patient_name_ciphertext")
+  phoneCiphertext       Bytes           @map("phone_ciphertext")
+  encryptionKeyVersion  String          @map("encryption_key_version") @db.VarChar(80)
+  fingerprint           String          @db.Char(64)
+  consumedAt            DateTime?       @map("consumed_at") @db.Timestamptz(3)
+  appointmentId         String?         @unique @map("appointment_id") @db.Uuid
+  appointment           Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([documentId])
+  @@index([expiresAt])
+  @@map("patient_consent_receipts")
 }
 
 model AppointmentConsent {

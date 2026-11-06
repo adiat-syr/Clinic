@@ -56,7 +56,7 @@ const workingWindow = {
 beforeEach(async () => {
   clock = new Date(now);
   // Static table names; URL was checked above. Never run against the application DB.
-  await client.$executeRaw`TRUNCATE TABLE bootstrap_state, rate_limit_buckets, audit_events, idempotency_keys, appointment_consents,
+  await client.$executeRaw`TRUNCATE TABLE patient_consent_receipts, bootstrap_state, rate_limit_buckets, audit_events, idempotency_keys, appointment_consents,
     appointments, availability_windows, doctor_services, doctors, services, staff_sessions,
     staff_users, consent_documents`;
   await seedSyntheticClinic(client, new Date('2030-01-02T00:00:00Z'), now);
@@ -110,11 +110,11 @@ async function rawInsert(
 }
 
 describe('migration invariants, inspected directly in PostgreSQL', () => {
-  it('contains all 13 tables, manual constraints, FK indexes and deferred consent trigger after repeat deploy', async () => {
+  it('contains all 14 tables, manual constraints, FK indexes and deferred consent trigger after repeat deploy', async () => {
     const tables = await sql.query<{ tablename: string }>(
       "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename <> '_prisma_migrations'",
     );
-    expect(tables.rowCount).toBe(13);
+    expect(tables.rowCount).toBe(14);
     const constraints = await sql.query<{ conname: string; contype: string }>(
       `SELECT conname,contype FROM pg_constraint WHERE conname IN ('appointments_no_overlap','availability_no_overlap','appointment_contacts','appointment_valid_interval','services_valid_offer','bootstrap_singleton','rate_limit_valid')`,
     );

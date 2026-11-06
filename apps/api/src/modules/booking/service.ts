@@ -179,6 +179,7 @@ export class BookingService {
           command.consent.documentId,
           command.consent.locale,
           command.contacts.fingerprint,
+          ...(command.consent.receiptHash ? [command.consent.receiptHash] : []),
         ]),
       )
       .digest('hex');
@@ -223,6 +224,25 @@ export class BookingService {
       });
       if (!document || document.retiredAt !== null || document.publishedAt > now)
         throw new BookingError('CONSENT_CHANGED');
+      let acceptedAt = now;
+      if (command.consent.receiptHash) {
+        await tx.$queryRaw`SELECT code_hash FROM patient_consent_receipts WHERE code_hash=${command.consent.receiptHash} FOR UPDATE`;
+        const receipt = await tx.patientConsentReceipt.findUnique({
+          where: { codeHash: command.consent.receiptHash },
+        });
+        now = this.now();
+        if (
+          !receipt ||
+          receipt.consumedAt ||
+          receipt.expiresAt <= now ||
+          receipt.acceptedAt > now ||
+          receipt.documentId !== document.id ||
+          receipt.locale !== command.consent.locale ||
+          receipt.fingerprint !== command.contacts.fingerprint
+        )
+          throw new BookingError('CONSENT_CODE_UNAVAILABLE');
+        acceptedAt = receipt.acceptedAt;
+      }
       const row = await tx.appointment.create({
         data: {
           doctorId: command.doctorId,
@@ -235,11 +255,16 @@ export class BookingService {
           phoneCiphertext: command.contacts.phoneCiphertext,
           encryptionKeyVersion: command.contacts.encryptionKeyVersion,
           consent: {
-            create: { documentId: document.id, locale: command.consent.locale, acceptedAt: now },
+            create: { documentId: document.id, locale: command.consent.locale, acceptedAt },
           },
         },
         select: appointmentSelection,
       });
+      if (command.consent.receiptHash)
+        await tx.patientConsentReceipt.update({
+          where: { codeHash: command.consent.receiptHash },
+          data: { appointmentId: row.id, consumedAt: now },
+        });
       await tx.idempotencyKey.create({
         data: {
           keyHash,

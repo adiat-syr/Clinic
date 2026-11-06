@@ -1,3 +1,4 @@
+import { translate as t } from './i18n';
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { message } from './api';
 export function LoadState({
@@ -10,12 +11,12 @@ export function LoadState({
   retry: () => void;
 }) {
   return loading ? (
-    <p role="status">Загружаем…</p>
+    <p role="status">{t('Загружаем…')}</p>
   ) : error ? (
     <div role="alert" className="error">
       <p>{message(error)}</p>
       <button type="button" onClick={retry}>
-        Повторить
+        {t('Повторить')}
       </button>
     </div>
   ) : null;
@@ -32,13 +33,16 @@ export function Pager({
   return (
     <div className="admin-pager">
       <span>
-        Всего: {total} · Страница {page}
+        {t('Всего: ')}
+        {total}
+        {t(' · Страница ')}
+        {page}
       </span>
       <button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-        Назад
+        {t('Назад')}
       </button>
       <button disabled={page * 20 >= total} onClick={() => setPage(page + 1)}>
-        Далее
+        {t('Далее')}
       </button>
     </div>
   );
@@ -76,7 +80,7 @@ export function Confirm({
         {!!error && <p role="alert">{message(error)}</p>}
         <div className="admin-actions">
           <button disabled={busy} onClick={onClose}>
-            Назад
+            {t('Назад')}
           </button>
           <button
             className="button"
@@ -89,7 +93,7 @@ export function Confirm({
                 .finally(() => setBusy(false));
             }}
           >
-            {busy ? 'Выполняем…' : 'Подтвердить'}
+            {busy ? t('Выполняем…') : t('Подтвердить')}
           </button>
         </div>
       </section>

@@ -35,6 +35,10 @@ export const credentialsSchema = z.strictObject({
   mfaSecret: z.string().regex(/^[A-Z2-7]{32,128}$/),
   code: z.string().regex(/^\d{6}$/),
 });
+export const operatorEmailChangeSchema = z.strictObject({
+  email: emailSchema,
+  newEmail: emailSchema,
+});
 export const uuidSchema = z.uuid().transform((value) => value.toLowerCase());
 export const paginationSchema = z.strictObject({
   page: z.coerce.number().int().min(1).max(10000).default(1),

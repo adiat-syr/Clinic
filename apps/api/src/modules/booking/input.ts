@@ -32,6 +32,10 @@ export const bookingSchema = selectionSchema.extend({
     documentId: uuid,
     accepted: z.literal(true),
     locale: z.enum(['ru', 'kk']),
+    receiptHash: z
+      .string()
+      .regex(/^[0-9a-f]{64}$/)
+      .optional(),
   }),
 });
 export const moveSchema = selectionSchema.extend({

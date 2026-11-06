@@ -167,7 +167,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   clock = new Date('2030-01-01T00:00:00Z');
   logs.length = 0;
-  await db.$executeRaw`TRUNCATE TABLE bootstrap_state,rate_limit_buckets,audit_events,idempotency_keys,appointment_consents,appointments,availability_windows,doctor_services,doctors,services,staff_sessions,staff_users,consent_documents`;
+  await db.$executeRaw`TRUNCATE TABLE patient_consent_receipts,bootstrap_state,rate_limit_buckets,audit_events,idempotency_keys,appointment_consents,appointments,availability_windows,doctor_services,doctors,services,staff_sessions,staff_users,consent_documents`;
   await seedSyntheticClinic(db, new Date('2030-01-02T00:00:00Z'), clock);
   password = `SYNTHETIC-${randomBytes(24).toString('base64url')}`;
   rootSecret = new OTPAuth.Secret({ size: 20 }).base32;
@@ -207,6 +207,75 @@ afterAll(async () => {
 });
 
 describe('bootstrap and credential boundaries', () => {
+  it('operator email change preserves credentials, role and bootstrap identity and revokes sessions', async () => {
+    const root = await logged(),
+      before = await db.staffUser.findUniqueOrThrow({ where: { id: rootId } }),
+      newEmail = 'renamed-admin@example.invalid';
+    await auth.changeStaffEmail({ email, newEmail: '  RENAMED-ADMIN@example.invalid ' });
+    const after = await db.staffUser.findUniqueOrThrow({ where: { id: rootId } });
+    expect(after.email).toBe(newEmail);
+    expect(after.passwordHash === before.passwordHash).toBe(true);
+    expect(
+      Buffer.from(after.mfaSecretCiphertext ?? []).equals(
+        Buffer.from(before.mfaSecretCiphertext ?? []),
+      ),
+    ).toBe(true);
+    expect(after.mfaLastUsedCounter === before.mfaLastUsedCounter).toBe(true);
+    expect(after.role).toBe('ADMIN');
+    expect(after.isActive).toBe(true);
+    expect((await db.bootstrapState.findUniqueOrThrow({ where: { id: true } })).adminUserId).toBe(
+      rootId,
+    );
+    expect((await root.send('GET', '/auth/me')).status).toBe(401);
+    const client = new Client();
+    await client.csrf();
+    expect((await client.send('POST', '/auth/login', { email, password })).status).toBe(401);
+    await challenge(client, newEmail);
+    expect((await client.send('GET', '/auth/me')).status).toBe(401);
+    advance();
+    expect((await client.send('POST', '/auth/mfa/verify', { code: code(rootSecret) })).status).toBe(
+      200,
+    );
+    const event = await db.auditEvent.findFirstOrThrow({
+      where: { action: 'STAFF_EMAIL_CHANGED' },
+    });
+    expect(event.metadata).toEqual({ fields: ['email'] });
+    expect(JSON.stringify(event).includes(newEmail)).toBe(false);
+    expect(JSON.stringify(event).includes(email)).toBe(false);
+  });
+  it('rejects duplicate/unknown/invalid email changes without revoking sessions or enabling HTTP assignment', async () => {
+    const root = await logged();
+    await expect(auth.changeStaffEmail({ email, newEmail: receptionEmail })).rejects.toMatchObject({
+      code: 'EMAIL_ALREADY_USED',
+    });
+    await expect(
+      auth.changeStaffEmail({ email: 'missing@example.invalid', newEmail: 'new@example.invalid' }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(auth.changeStaffEmail({ email, newEmail: email })).rejects.toMatchObject({
+      code: 'EMAIL_UNCHANGED',
+    });
+    await expect(auth.changeStaffEmail({ email, newEmail: 'invalid' })).rejects.toMatchObject({
+      code: 'INVALID_INPUT',
+    });
+    expect(
+      (await root.send('PATCH', `/admin/staff/${rootId}`, { email: 'new@example.invalid' })).status,
+    ).toBe(400);
+    expect((await root.send('GET', '/auth/me')).status).toBe(200);
+    expect(await db.auditEvent.count({ where: { action: 'STAFF_EMAIL_CHANGED' } })).toBe(0);
+  });
+  it('serializes concurrent claims to a new email without changing either role', async () => {
+    const results = await Promise.allSettled([
+      auth.changeStaffEmail({ email, newEmail: 'claimed@example.invalid' }),
+      auth2.changeStaffEmail({ email: receptionEmail, newEmail: 'claimed@example.invalid' }),
+    ]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(await db.staffUser.count({ where: { email: 'claimed@example.invalid' } })).toBe(1);
+    expect((await db.staffUser.findUniqueOrThrow({ where: { id: rootId } })).role).toBe('ADMIN');
+    expect((await db.staffUser.findUniqueOrThrow({ where: { id: receptionistId } })).role).toBe(
+      'RECEPTIONIST',
+    );
+    expect(await db.auditEvent.count({ where: { action: 'STAFF_EMAIL_CHANGED' } })).toBe(1);
+  });
   it('bootstrap is one-time even after blocking', async () => {
     await expect(
       auth.bootstrap({

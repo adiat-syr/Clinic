@@ -40,7 +40,9 @@
     "db:check": "npm run db:check --workspace @clinic/api",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "consent:publish": "npm run consent:publish --workspace @clinic/api --",
-    "test:web": "npm run build && node --env-file-if-exists=.env scripts/test-web.mjs"
+    "test:web": "npm run build && node --env-file-if-exists=.env scripts/test-web.mjs",
+    "staff:recover-admin": "npm run staff:recover-admin --workspace @clinic/api",
+    "staff:email": "npm run staff:email --workspace @clinic/api"
   },
   "overrides": {
     "minimatch": "11.0.1"

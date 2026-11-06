@@ -1,6 +1,15 @@
+import { translate as t, labelName, adminLocale } from './i18n';
 import { useLoad } from './useLoad';
-import { useState } from 'react';
-import { doctors, services, availabilitySchema, request } from '../api/clinic';
+import { useState, useRef } from 'react';
+import {
+  doctors,
+  services,
+  availabilitySchema,
+  request,
+  newKey,
+  ApiError,
+  resultSchema,
+} from '../api/clinic';
 import {
   adminRequest,
   appointmentSchema,
@@ -19,7 +28,9 @@ export function Appointments({ admin }: { admin: boolean }) {
     [status, setStatus] = useState(''),
     [page, setPage] = useState(1),
     [selected, setSelected] = useState(''),
-    [search, setSearch] = useState('');
+    [search, setSearch] = useState(''),
+    [creating, setCreating] = useState(false),
+    [created, setCreated] = useState('');
   const team = useLoad((signal) => doctors(signal), ['doctors-public']),
     catalog = useLoad((signal) => services(signal), ['services-public']);
   const query = new URLSearchParams({
@@ -44,8 +55,8 @@ export function Appointments({ admin }: { admin: boolean }) {
     <>
       <div className="admin-title">
         <div>
-          <h1>Записи на приём</h1>
-          <p>Заявки, подтверждение и работа с расписанием</p>
+          <h1>{t('Записи на приём')}</h1>
+          <p>{t('Заявки, подтверждение и работа с расписанием')}</p>
         </div>
         <button
           onClick={() => {
@@ -53,22 +64,51 @@ export function Appointments({ admin }: { admin: boolean }) {
             setSelected('');
           }}
         >
-          Обновить
+          {t('Обновить')}
         </button>
       </div>
+      <button
+        className="button"
+        onClick={() => {
+          setCreating(true);
+          setCreated('');
+        }}
+      >
+        {t('Создать запись по коду пациента')}
+      </button>
+      {created && (
+        <p role="status">
+          {t('Заявка создана: ')}
+          {created}
+        </p>
+      )}
+      {creating && (
+        <Reschedule
+          close={() => setCreating(false)}
+          done={(day, reference) => {
+            setCreating(false);
+            setDate(day);
+            setPage(1);
+            setStatus('');
+            setDoctor('');
+            setCreated(reference ?? '');
+            rows.refresh();
+          }}
+        />
+      )}
       <div className="admin-metrics">
         <div className="panel">
-          <span>Найдено записей</span>
+          <span>{t('Найдено записей')}</span>
           <strong>{rows.data?.pagination.total ?? '—'}</strong>
         </div>
         <div className="panel">
-          <span>Фильтр статуса</span>
-          <strong>{status ? statuses[status as keyof typeof statuses] : 'Все статусы'}</strong>
+          <span>{t('Фильтр статуса')}</span>
+          <strong>{status ? statuses[status as keyof typeof statuses] : t('Все статусы')}</strong>
         </div>
       </div>
       <section className="panel admin-filters">
         <label>
-          Дата
+          {t('Дата')}
           <input
             type="date"
             required
@@ -82,7 +122,7 @@ export function Appointments({ admin }: { admin: boolean }) {
           />
         </label>
         <label>
-          Врач
+          {t('Врач')}
           <select
             value={doctor}
             onChange={(e) => {
@@ -90,25 +130,25 @@ export function Appointments({ admin }: { admin: boolean }) {
               reset();
             }}
           >
-            <option value="">Все врачи</option>
+            <option value="">{t('Все врачи')}</option>
             {team.data?.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.nameRu}
+                {labelName(d)}
               </option>
             ))}
           </select>
         </label>
         <label>
-          Статус
+          {t('Статус')}
           <select
-            aria-label="Статус"
+            aria-label={t('Статус')}
             value={status}
             onChange={(e) => {
               setStatus(e.target.value);
               reset();
             }}
           >
-            <option value="">Все статусы</option>
+            <option value="">{t('Все статусы')}</option>
             {Object.entries(statuses).map(([v, label]) => (
               <option key={v} value={v}>
                 {label}
@@ -117,7 +157,7 @@ export function Appointments({ admin }: { admin: boolean }) {
           </select>
         </label>
         <label>
-          Номер на текущей странице
+          {t('Номер на текущей странице')}
           <input
             type="search"
             value={search}
@@ -129,17 +169,17 @@ export function Appointments({ admin }: { admin: boolean }) {
       <LoadState {...rows} retry={rows.refresh} />
       <div className="admin-workspace">
         <section className="panel">
-          <h2>Список приёмов</h2>
-          {rows.data && !rows.data.items.length && <p>На выбранную дату записей нет.</p>}
+          <h2>{t('Список приёмов')}</h2>
+          {rows.data && !rows.data.items.length && <p>{t('На выбранную дату записей нет.')}</p>}
           <div className="admin-table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Время</th>
-                  <th>Номер / статус</th>
-                  <th>Врач и услуга</th>
-                  <th>Цена</th>
-                  <th>Действие</th>
+                  <th>{t('Время')}</th>
+                  <th>{t('Номер / статус')}</th>
+                  <th>{t('Врач и услуга')}</th>
+                  <th>{t('Цена')}</th>
+                  <th>{t('Действие')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,22 +193,26 @@ export function Appointments({ admin }: { admin: boolean }) {
                         <span className={'status status-' + r.status}>{statuses[r.status]}</span>
                       </td>
                       <td>
-                        {r.doctorNameRu ??
-                          team.data?.find((d) => d.id === r.doctorId)?.nameRu ??
+                        {(adminLocale() === 'kk' ? r.doctorNameKk : r.doctorNameRu) ??
+                          team.data?.find((d) => d.id === r.doctorId)?.[
+                            adminLocale() === 'kk' ? 'nameKk' : 'nameRu'
+                          ] ??
                           r.doctorId}
                         <small>
-                          {r.serviceNameRu ??
-                            catalog.data?.find((s) => s.id === r.serviceId)?.nameRu ??
+                          {(adminLocale() === 'kk' ? r.serviceNameKk : r.serviceNameRu) ??
+                            catalog.data?.find((s) => s.id === r.serviceId)?.[
+                              adminLocale() === 'kk' ? 'nameKk' : 'nameRu'
+                            ] ??
                             r.serviceId}
                         </small>
                       </td>
                       <td>{r.priceKzt} ₸</td>
                       <td>
                         <button
-                          aria-label={'Открыть ' + r.reference}
+                          aria-label={t('Открыть ') + r.reference}
                           onClick={() => setSelected(r.id)}
                         >
-                          Карточка
+                          {t('Карточка')}
                         </button>
                       </td>
                     </tr>
@@ -229,44 +273,49 @@ function Detail({
   };
   return (
     <aside className="panel admin-detail">
-      <button onClick={close}>Закрыть карточку</button>
+      <button onClick={close}>{t('Закрыть карточку')}</button>
       <LoadState {...detail} retry={detail.refresh} />
       {row && (
         <>
-          <h2>Карточка заявки</h2>
+          <h2>{t('Карточка заявки')}</h2>
           <p className="admin-reference">{row.reference}</p>
           <span className={'status status-' + row.status}>{statuses[row.status]}</span>
-          <h3>{row.contacts?.name ?? 'Контакты удалены'}</h3>
+          <h3>{row.contacts?.name ?? t('Контакты удалены')}</h3>
           <p>{row.contacts?.phone}</p>
           <p>
-            {row.doctorNameRu}
+            {adminLocale() === 'kk' ? row.doctorNameKk : row.doctorNameRu}
             <br />
-            {row.serviceNameRu}
+            {adminLocale() === 'kk' ? row.serviceNameKk : row.serviceNameRu}
           </p>
           <p>
             {time(row.startsAt)} — {time(row.endsAt)}
             <br />
-            {row.priceKzt} ₸ · {row.durationMinutes} мин
+            {row.priceKzt} ₸ · {row.durationMinutes}
+            {t('мин')}
           </p>
-          <p>Версия: {row.version}. Чтение контактов записано в аудит.</p>
+          <p>
+            {t('Версия: ')}
+            {row.version}
+            {t('. Чтение контактов записано в аудит.')}
+          </p>
           <div className="admin-actions vertical">
             {row.status === 'PENDING' && new Date(row.startsAt).getTime() > now && (
               <button className="button" onClick={() => setOperation('CONFIRMED')}>
-                Подтвердить запись
+                {t('Подтвердить запись')}
               </button>
             )}
             {['PENDING', 'CONFIRMED'].includes(row.status) && (
               <>
-                <button onClick={() => setOperation('reschedule')}>Перенести время</button>
+                <button onClick={() => setOperation('reschedule')}>{t('Перенести время')}</button>
                 <button className="danger" onClick={() => setOperation('CANCELLED')}>
-                  Отменить запись
+                  {t('Отменить запись')}
                 </button>
               </>
             )}
             {row.status === 'CONFIRMED' && new Date(row.endsAt).getTime() <= now && (
               <>
-                <button onClick={() => setOperation('COMPLETED')}>Завершить приём</button>
-                <button onClick={() => setOperation('NO_SHOW')}>Отметить неявку</button>
+                <button onClick={() => setOperation('COMPLETED')}>{t('Завершить приём')}</button>
+                <button onClick={() => setOperation('NO_SHOW')}>{t('Отметить неявку')}</button>
               </>
             )}
             {admin && !row.consent?.withdrawnAt && (
@@ -276,12 +325,17 @@ function Detail({
                   setOperation('withdraw');
                 }}
               >
-                Зафиксировать отзыв согласия
+                {t('Зафиксировать отзыв согласия')}
               </button>
             )}
-            <button onClick={detail.refresh}>Обновить карточку</button>
+            <button onClick={detail.refresh}>{t('Обновить карточку')}</button>
           </div>
-          {row.consent?.withdrawnAt && <p>Отзыв согласия: {time(row.consent.withdrawnAt)}</p>}
+          {row.consent?.withdrawnAt && (
+            <p>
+              {t('Отзыв согласия:')}
+              {time(row.consent.withdrawnAt)}
+            </p>
+          )}
           {operation === 'reschedule' ? (
             <Reschedule row={row} done={success} close={() => setOperation('')} />
           ) : (
@@ -289,7 +343,7 @@ function Detail({
               <Confirm
                 title={
                   operation === 'withdraw'
-                    ? 'Проверенный отзыв согласия'
+                    ? t('Проверенный отзыв согласия')
                     : statuses[operation as keyof typeof statuses]
                 }
                 onClose={() => setOperation('')}
@@ -310,7 +364,7 @@ function Detail({
                   success();
                 }}
               >
-                <p>Проверьте номер и время заявки. Изменения фиксируются в аудите.</p>
+                <p>{t('Проверьте номер и время заявки. Изменения фиксируются в аудите.')}</p>
                 {operation === 'withdraw' && (
                   <>
                     <label className="checkbox">
@@ -319,11 +373,12 @@ function Detail({
                         checked={verified}
                         onChange={(e) => setVerified(e.target.checked)}
                       />
-                      Личность и обращение проверены
+                      {t('Личность и обращение проверены')}
                     </label>
                     <p>
-                      Фиксация не удаляет и не отменяет запись автоматически. Дальнейшие действия —
-                      по утверждённому регламенту.
+                      {t(
+                        'Фиксация не удаляет и не отменяет запись автоматически. Дальнейшие действия — по утверждённому регламенту.',
+                      )}
                     </p>
                   </>
                 )}
@@ -340,17 +395,20 @@ function Reschedule({
   done,
   close,
 }: {
-  row: { id: string; doctorId: string; serviceId: string; version: number };
-  done: () => void;
+  row?: { id: string; doctorId: string; serviceId: string; version: number };
+  done: (date: string, reference?: string) => void;
   close: () => void;
 }) {
   const team = useLoad((signal) => doctors(signal), ['move-doctors']),
-    [doctor, setDoctor] = useState(row.doctorId),
-    [service, setService] = useState(row.serviceId),
+    [doctor, setDoctor] = useState(row?.doctorId ?? ''),
+    [service, setService] = useState(row?.serviceId ?? ''),
     [date, setDate] = useState(clinicDay),
     [slot, setSlot] = useState(''),
     [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [code, setCode] = useState(''),
+    [uncertain, setUncertain] = useState(false);
+  const attempt = useRef<{ key: string; body: unknown } | null>(null);
   const selected = team.data?.find((d) => d.id === doctor),
     available = !!selected?.services.some((s) => s.id === service);
   const slots = useLoad(
@@ -365,16 +423,67 @@ function Reschedule({
   );
   return (
     <section className="admin-inline">
-      <h3>Перенос записи</h3>
-      <p>При конфликте исходный приём сохранится.</p>
+      <h3>{row ? t('Перенос записи') : t('Запись сотрудником')}</h3>
+      <p>
+        {row
+          ? t('При конфликте исходный приём сохранится.')
+          : t(
+              'Пациент самостоятельно подтверждает согласие. Код действует 5 минут. Не заполняйте согласие вместо пациента.',
+            )}
+      </p>
+      {!row && (
+        <p>
+          <a href={'/' + adminLocale() + '/phone-consent'}>{t('Страница согласия для пациента')}</a>
+        </p>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (!slots.data?.slots.some((s) => s.startsAt === slot)) {
-            setError('Выберите доступное время.');
+          if (!uncertain && !slots.data?.slots.some((s) => s.startsAt === slot)) {
+            setError(t('Выберите доступное время.'));
             return;
           }
           setBusy(true);
+          if (!row) {
+            if (!attempt.current)
+              attempt.current = {
+                key: newKey(),
+                body: {
+                  doctorId: doctor,
+                  serviceId: service,
+                  startsAt: slot,
+                  expectedPriceKzt: slots.data?.priceKzt,
+                  expectedDurationMinutes: slots.data?.durationMinutes,
+                  consentCode: code,
+                },
+              };
+            void adminRequest('/admin/appointments', 'POST', attempt.current.body, undefined, {
+              'idempotency-key': attempt.current.key,
+            })
+              .then((v) => {
+                const result = resultSchema.parse(v);
+                attempt.current = null;
+                done(date, result.reference);
+              })
+              .catch((e) => {
+                setError(message(e));
+                if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
+                  attempt.current = null;
+                  setUncertain(false);
+                  setSlot('');
+                  if (e.code === 'CONSENT_CODE_UNAVAILABLE' || e.code === 'CONSENT_CHANGED')
+                    setCode('');
+                  slots.refresh();
+                } else setUncertain(true);
+              })
+              .finally(() => setBusy(false));
+            return;
+          }
+          if (!slots.data) {
+            setBusy(false);
+            setError(t('Выберите доступное время.'));
+            return;
+          }
           void adminRequest('/admin/appointments/' + row.id, 'PATCH', {
             action: 'reschedule',
             version: row.version,
@@ -384,7 +493,7 @@ function Reschedule({
             expectedPriceKzt: slots.data.priceKzt,
             expectedDurationMinutes: slots.data.durationMinutes,
           })
-            .then(done)
+            .then(() => done(date))
             .catch((e) => {
               setError(message(e));
               setSlot('');
@@ -393,72 +502,98 @@ function Reschedule({
             .finally(() => setBusy(false));
         }}
       >
-        <label>
-          Врач для переноса
-          <select
-            aria-label="Врач для переноса"
-            value={doctor}
-            onChange={(e) => {
-              setDoctor(e.target.value);
-              setService('');
-              setSlot('');
-            }}
-          >
-            {team.data?.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nameRu}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Услуга для переноса
-          <select
-            aria-label="Услуга для переноса"
-            required
-            value={service}
-            onChange={(e) => {
-              setService(e.target.value);
-              setSlot('');
-            }}
-          >
-            <option value="">Выберите услугу</option>
-            {selected?.services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nameRu}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Новая дата
-          <input
-            type="date"
-            required
-            value={date}
-            onChange={(e) => {
-              if (e.target.value) setDate(e.target.value);
-              setSlot('');
-            }}
-          />
-        </label>
-        <LoadState {...slots} retry={slots.refresh} />
-        <div className="slots">
-          {slots.data?.slots.map((s) => (
-            <button
-              type="button"
-              key={s.startsAt}
-              aria-pressed={slot === s.startsAt}
-              onClick={() => setSlot(s.startsAt)}
+        <fieldset disabled={busy || uncertain}>
+          {!row && (
+            <label>
+              {t('Код согласия пациента')}
+              <input
+                required
+                pattern="[a-f0-9]{32}"
+                maxLength={32}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+          )}
+          <label>
+            {row ? t('Врач для переноса') : t('Врач для новой записи')}
+            <select
+              aria-label={row ? t('Врач для переноса') : t('Врач для новой записи')}
+              required
+              value={doctor}
+              onChange={(e) => {
+                setDoctor(e.target.value);
+                setService('');
+                setSlot('');
+              }}
             >
-              {time(s.startsAt)}
-            </button>
-          ))}
-        </div>
-        {slots.data && !slots.data.slots.length && <p>Нет свободного времени.</p>}
-        {slots.data && (
-          <p>
-            Новые условия: {slots.data.priceKzt} ₸ · {slots.data.durationMinutes} мин
+              <option value="">{t('Выберите врача')}</option>
+              {team.data?.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {labelName(d)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {row ? t('Услуга для переноса') : t('Услуга для новой записи')}
+            <select
+              aria-label={row ? t('Услуга для переноса') : t('Услуга для новой записи')}
+              required
+              value={service}
+              onChange={(e) => {
+                setService(e.target.value);
+                setSlot('');
+              }}
+            >
+              <option value="">{t('Выберите услугу')}</option>
+              {selected?.services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {labelName(s)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {row ? t('Новая дата') : t('Дата новой записи')}
+            <input
+              type="date"
+              required
+              value={date}
+              onChange={(e) => {
+                if (e.target.value) setDate(e.target.value);
+                setSlot('');
+              }}
+            />
+          </label>
+          <LoadState {...slots} retry={slots.refresh} />
+          <div className="slots">
+            {slots.data?.slots.map((s) => (
+              <button
+                type="button"
+                key={s.startsAt}
+                aria-pressed={slot === s.startsAt}
+                onClick={() => setSlot(s.startsAt)}
+              >
+                {time(s.startsAt)}
+              </button>
+            ))}
+          </div>
+          {slots.data && !slots.data.slots.length && <p>{t('Нет свободного времени.')}</p>}
+          {slots.data && (
+            <p>
+              {t('Новые условия:')}
+              {slots.data.priceKzt} ₸ · {slots.data.durationMinutes}
+              {t('мин')}
+            </p>
+          )}
+        </fieldset>
+        {uncertain && (
+          <p role="alert">
+            {t(
+              'Ответ сервера не получен. Повторите ту же попытку; новая запись не создаётся при идентичном повторе.',
+            )}
           </p>
         )}
         {error && (
@@ -468,10 +603,10 @@ function Reschedule({
         )}
         <div className="admin-actions">
           <button type="button" onClick={close}>
-            Назад
+            {t('Назад')}
           </button>
           <button className="button" disabled={busy}>
-            Сохранить перенос
+            {row ? t('Сохранить перенос') : uncertain ? t('Повторить') : t('Создать запись')}
           </button>
         </div>
       </form>

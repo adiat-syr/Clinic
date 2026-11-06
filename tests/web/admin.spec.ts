@@ -32,7 +32,9 @@ async function restore() {
     );
 }
 test.beforeEach(async () => {
-  await db.query('TRUNCATE idempotency_keys,appointment_consents,appointments,staff_sessions');
+  await db.query(
+    'TRUNCATE patient_consent_receipts,idempotency_keys,appointment_consents,appointments,staff_sessions',
+  );
   await db.query('DELETE FROM rate_limit_buckets');
   await db.query('DELETE FROM availability_windows WHERE NOT(id=ANY($1::uuid[]))', [
     syntheticIds.windows,
@@ -45,14 +47,20 @@ test.beforeEach(async () => {
 });
 test.afterEach(restore);
 test.afterAll(() => db.end());
-async function login(page: Page, role: 'ADMIN' | 'RECEPTIONIST' = 'ADMIN') {
-  await page.goto('/admin');
+async function login(
+  page: Page,
+  role: 'ADMIN' | 'RECEPTIONIST' = 'ADMIN',
+  locale: 'ru' | 'kk' = 'ru',
+) {
+  await page.goto('/admin' + (locale === 'kk' ? '?lang=kk' : ''));
   await page
     .getByLabel('Email', { exact: true })
     .fill(role === 'ADMIN' ? 'web-admin@example.invalid' : 'web-reception@example.invalid');
-  await page.getByLabel('Пароль', { exact: true }).fill(password ?? '');
-  await page.getByRole('button', { name: 'Войти', exact: true }).click();
-  await page.getByLabel('Код MFA', { exact: true }).fill(
+  await page
+    .getByLabel(locale === 'ru' ? 'Пароль' : 'Құпиясөз', { exact: true })
+    .fill(password ?? '');
+  await page.getByRole('button', { name: locale === 'ru' ? 'Войти' : 'Кіру', exact: true }).click();
+  await page.getByLabel(locale === 'ru' ? 'Код MFA' : 'MFA коды', { exact: true }).fill(
     new OTPAuth.TOTP({
       secret: OTPAuth.Secret.fromBase32(secret ?? ''),
       algorithm: 'SHA1',
@@ -60,8 +68,15 @@ async function login(page: Page, role: 'ADMIN' | 'RECEPTIONIST' = 'ADMIN') {
       period: 30,
     }).generate(),
   );
-  await page.getByRole('button', { name: 'Подтвердить MFA', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Записи на приём', exact: true })).toBeVisible();
+  await page
+    .getByRole('button', { name: locale === 'ru' ? 'Подтвердить MFA' : 'MFA растау', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', {
+      name: locale === 'ru' ? 'Записи на приём' : 'Қабылдауға жазылулар',
+      exact: true,
+    }),
+  ).toBeVisible();
 }
 async function create(
   request: APIRequestContext,
@@ -99,6 +114,151 @@ async function open(page: Page, reference: string) {
     page.locator('.admin-detail').getByRole('heading', { name: 'Синтетический посетитель' }),
   ).toBeVisible();
 }
+async function obtainPatientCode(page: Page, locale: 'ru' | 'kk' = 'ru') {
+  await page.goto('/' + locale + '/phone-consent');
+  await page
+    .getByLabel(locale === 'ru' ? 'Ваше имя' : 'Атыңыз', { exact: true })
+    .fill('Синтетический посетитель');
+  await page
+    .getByLabel(locale === 'ru' ? 'Номер телефона' : 'Телефон нөмірі', { exact: true })
+    .fill('+70000000000');
+  await expect(
+    page.getByRole('button', {
+      name: locale === 'ru' ? 'Получить одноразовый код' : 'Бір реттік кодты алу',
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await page.getByRole('checkbox').check();
+  await page
+    .getByRole('button', {
+      name: locale === 'ru' ? 'Получить одноразовый код' : 'Бір реттік кодты алу',
+      exact: true,
+    })
+    .click();
+  const output = page.locator('output');
+  await expect(output).toBeVisible();
+  const code = await output.textContent();
+  if (!code) throw new Error('Patient receipt required');
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+  return code;
+}
+async function prepareManual(page: Page, code: string) {
+  await page.getByRole('button', { name: 'Создать запись по коду пациента', exact: true }).click();
+  await page.getByLabel('Код согласия пациента', { exact: true }).fill(code);
+  await page
+    .getByLabel('Врач для новой записи', { exact: true })
+    .selectOption(syntheticIds.doctors[0]);
+  await page
+    .getByLabel('Услуга для новой записи', { exact: true })
+    .selectOption(syntheticIds.services[0]);
+  await page.getByLabel('Дата новой записи', { exact: true }).fill(process.env.WEB_TEST_DATE ?? '');
+  await page.locator('.admin-inline .slots button').first().click();
+}
+test('patient grants consent and RECEPTIONIST books once, without supplying consent or contacts', async ({
+  page,
+}) => {
+  const code = await obtainPatientCode(page);
+  await login(page, 'RECEPTIONIST');
+  await prepareManual(page, code);
+  await page.getByRole('button', { name: 'Создать запись', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Заявка создана' })).toBeVisible();
+  expect((await db.query('SELECT count(*)::int n FROM appointments')).rows[0].n).toBe(1);
+  expect(
+    (
+      await db.query(
+        'SELECT count(*)::int n FROM patient_consent_receipts WHERE consumed_at IS NOT NULL',
+      )
+    ).rows[0].n,
+  ).toBe(1);
+  await prepareManual(page, code);
+  await page.getByRole('button', { name: 'Создать запись', exact: true }).click();
+  await expect(page.locator('.admin-inline').getByRole('alert')).toContainText('уже использован');
+  expect((await db.query('SELECT count(*)::int n FROM appointments')).rows[0].n).toBe(1);
+});
+test('manual retry after commit does not make a second appointment', async ({ page }) => {
+  const code = await obtainPatientCode(page);
+  await login(page);
+  await prepareManual(page, code);
+  let lost = false;
+  await page.route('**/api/v1/admin/appointments', async (route) => {
+    if (route.request().method() === 'POST' && !lost) {
+      lost = true;
+      await route.fetch();
+      await route.abort();
+    } else await route.continue();
+  });
+  await page.getByRole('button', { name: 'Создать запись', exact: true }).click();
+  await expect(
+    page.locator('.admin-inline').getByText('Ответ сервера не получен.', { exact: false }),
+  ).toBeVisible();
+  await page
+    .locator('.admin-inline')
+    .getByRole('button', { name: 'Повторить', exact: true })
+    .click();
+  await expect(page.getByRole('status').filter({ hasText: 'Заявка создана' })).toBeVisible();
+  expect((await db.query('SELECT count(*)::int n FROM appointments')).rows[0].n).toBe(1);
+});
+test('KK patient consent and staff catalogue, dialogs, calendar and navigation stay localized', async ({
+  page,
+}) => {
+  await obtainPatientCode(page, 'kk');
+  await login(page, 'ADMIN', 'kk');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'kk');
+  await page.getByRole('link', { name: 'Қызметтер мен бағалар', exact: true }).click();
+  await expect(page).toHaveURL(/lang=kk/);
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Синтетикалық кеңес' })
+    .getByRole('button', { name: 'Өңдеу', exact: true })
+    .click();
+  await expect(page.getByLabel('Бағасы KZT', { exact: true })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Белсенді', exact: true }).uncheck();
+  await page.getByRole('button', { name: 'Сақтау', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveAttribute(
+    'aria-label',
+    'Каталог жазбасын өшіру керек пе?',
+  );
+  await page.getByRole('dialog').getByRole('button', { name: 'Артқа', exact: true }).click();
+  await page.getByRole('link', { name: 'Дәрігерлер күнтізбесі', exact: true }).click();
+  await expect(page.getByLabel('Күнтізбе күні', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.tmp/admin-kk-mobile.png', fullPage: true });
+});
+test('RECEPTIONIST password change revokes sessions and wrong password is safely rejected', async ({
+  page,
+}) => {
+  const original = (
+    await db.query<{ password_hash: string }>(
+      'SELECT password_hash FROM staff_users WHERE email=$1',
+      ['web-reception@example.invalid'],
+    )
+  ).rows[0];
+  if (!original) throw new Error('Synthetic account required');
+  try {
+    await login(page, 'RECEPTIONIST');
+    await page.getByRole('link', { name: 'Мой пароль', exact: true }).click();
+    await page.getByLabel('Текущий пароль', { exact: true }).fill('incorrect-synthetic-password');
+    await page
+      .getByLabel('Новый пароль', { exact: true })
+      .fill('SYNTHETIC-' + randomBytes(24).toString('hex'));
+    await page.getByRole('button', { name: 'Сменить пароль и выйти', exact: true }).click();
+    await expect(page.locator('.admin-content').getByRole('alert')).toBeVisible();
+    await page.getByLabel('Текущий пароль', { exact: true }).fill(password ?? '');
+    await page
+      .getByLabel('Новый пароль', { exact: true })
+      .fill('SYNTHETIC-' + randomBytes(24).toString('hex'));
+    await page.getByRole('button', { name: 'Сменить пароль и выйти', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Вход сотрудника', exact: true })).toBeVisible();
+    expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+  } finally {
+    await db.query('UPDATE staff_users SET password_hash=$1 WHERE email=$2', [
+      original.password_hash,
+      'web-reception@example.invalid',
+    ]);
+  }
+});
+
 test('anonymous and password-only sessions cannot enter protected workspace', async ({ page }) => {
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Вход сотрудника' })).toBeVisible();

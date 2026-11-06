@@ -39,3 +39,7 @@ OpenAPI: `docs/openapi.json`, генератор `npm run openapi:generate`, п�
 ## Дополнение этапа 6: названия в защищённой очереди
 
 GET /admin/appointments и GET /admin/appointments/:id дополнительно возвращают doctorNameRu, doctorNameKk, serviceNameRu, serviceNameKk через существующую связь doctorService. Это текущие названия каталога, доступные после архивации; они не являются историческими snapshots имени. В OpenAPI поля optional для совместимости общего summary с ответами изменения статуса. Список не получает контакты; расшифровка и audit чтения остаются только в карточке. Роли и транзакции не изменены. Public API и ограничения PostgreSQL остаются прежними.
+
+## Согласованное дополнение MVP
+
+Добавлены POST /patient-consent-codes и защищённый POST /admin/appointments: самостоятельное согласие посетителя с одноразовым кодом на 5 минут и дополнительное создание сотрудником без передачи contacts/accepted. Контракты — openapi.json; точная процедура, транзакции, retry и ограничения идентификации — PHONE-BOOKING.md. Основной public POST /appointments сохранён. Только synthetic; это не юридически утверждённая телефонная запись.

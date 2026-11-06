@@ -48,6 +48,7 @@ export function createErrorHandler(
               'SCHEDULE_HAS_APPOINTMENTS',
               'OFFER_CHANGED',
               'CONSENT_CHANGED',
+              'CONSENT_CODE_UNAVAILABLE',
               'IDEMPOTENCY_CONFLICT',
               'IDEMPOTENCY_EXPIRED',
             ].includes(error.code)

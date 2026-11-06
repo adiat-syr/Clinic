@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { doctors, services, type Service, type Doctor } from '../api/clinic';
 import { Booking } from '../features/Booking';
+import { PatientConsent } from '../features/PatientConsent';
 import { copy, type Locale } from './i18n';
 import './site.css';
 export function App({
@@ -176,7 +177,7 @@ export function App({
             </div>
           </section>
         )}
-        {page !== 'home' && page !== 'booking' && <h1>{title}</h1>}
+        {page !== 'home' && page !== 'booking' && page !== 'phone-consent' && <h1>{title}</h1>}
         {busy && (
           <p role="status" className="panel">
             {t.loading}
@@ -318,7 +319,16 @@ export function App({
             <a href={href('booking')}>{t.booking}</a>
           </section>
         )}
-        {!['home', 'services', 'doctors', 'booking', 'contacts', 'privacy'].includes(page) && (
+        {page === 'phone-consent' && <PatientConsent locale={locale} />}
+        {![
+          'home',
+          'services',
+          'doctors',
+          'booking',
+          'contacts',
+          'privacy',
+          'phone-consent',
+        ].includes(page) && (
           <a className="button" href={href('home')}>
             {t.back}
           </a>
@@ -330,6 +340,11 @@ export function App({
         </a>
         <p>{t.synthetic}</p>
         <a href={href('privacy')}>{t.privacy}</a>
+        <a href={href('phone-consent')}>
+          {locale === 'ru'
+            ? 'Согласие для записи с сотрудником'
+            : 'Қызметкер арқылы жазылуға келісім'}
+        </a>
       </footer>
       <nav className="mobile-nav" aria-label={t.booking}>
         {nav.map(([p, label], i) => (

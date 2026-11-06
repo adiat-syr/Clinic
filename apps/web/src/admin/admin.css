@@ -360,3 +360,15 @@ td button {
 .admin-dialog::backdrop {
   background: #13252f88;
 }
+.admin-language {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #e1e7ef;
+}
+.admin-language a[aria-current] {
+  font-weight: 700;
+  text-decoration: underline;
+}

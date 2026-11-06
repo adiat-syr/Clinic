@@ -1,3 +1,4 @@
+import { translate as t, adminLocale } from './i18n';
 import { z } from 'zod/mini';
 import { request, ApiError, serviceSchema, doctorSchema } from '../api/clinic';
 export const identitySchema = z.object({
@@ -73,9 +74,10 @@ export async function adminRequest(
   method = 'GET',
   body?: unknown,
   signal?: AbortSignal,
+  extraHeaders: Record<string, string> = {},
 ) {
   try {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...extraHeaders };
     if (method !== 'GET') {
       const csrf = z.object({ csrfToken: z.string() }).parse(await request('/auth/csrf'));
       headers['x-csrf-token'] = csrf.csrfToken;
@@ -91,6 +93,7 @@ export async function adminRequest(
     if (
       error instanceof ApiError &&
       error.status === 401 &&
+      !(path === '/auth/password' && error.code === 'LOGIN_FAILED') &&
       !['/auth/login', '/auth/mfa/verify', '/auth/me'].includes(path)
     )
       window.dispatchEvent(new Event('clinic-session-expired'));
@@ -99,35 +102,41 @@ export async function adminRequest(
 }
 export function message(error: unknown) {
   if (!(error instanceof ApiError))
-    return 'Не удалось выполнить запрос. Повторите после проверки соединения.';
+    return t('Не удалось выполнить запрос. Повторите после проверки соединения.');
   const messages: Record<string, string> = {
-    LOGIN_FAILED: 'Неверные данные входа или доступ отключён.',
-    INVALID_MFA: 'Неверный или уже использованный код. Дождитесь нового кода.',
-    UNAUTHORIZED: 'Сессия истекла. Войдите заново.',
-    FORBIDDEN: 'Недостаточно прав для операции.',
-    CSRF_FAILED: 'Не удалось проверить запрос. Обновите страницу и повторите.',
-    RATE_LIMITED: 'Лимит запросов. Подождите перед повтором.',
-    SLOT_UNAVAILABLE: 'Это время уже занято. Исходная запись сохранена.',
-    VERSION_CONFLICT: 'Запись изменена другим сотрудником. Обновите карточку.',
-    SCHEDULE_HAS_APPOINTMENTS:
+    CONSENT_CODE_UNAVAILABLE: t(
+      'Код недействителен, истёк или уже использован. Нужен новый код пациента.',
+    ),
+    CONSENT_CHANGED: t('Версия согласия изменилась. Пациент должен подтвердить новую версию.'),
+    IDEMPOTENCY_CONFLICT: t('Попытка уже отправлялась с другими данными. Обновите форму.'),
+    LOGIN_FAILED: t('Неверные данные входа или доступ отключён.'),
+    INVALID_MFA: t('Неверный или уже использованный код. Дождитесь нового кода.'),
+    UNAUTHORIZED: t('Сессия истекла. Войдите заново.'),
+    FORBIDDEN: t('Недостаточно прав для операции.'),
+    CSRF_FAILED: t('Не удалось проверить запрос. Обновите страницу и повторите.'),
+    RATE_LIMITED: t('Лимит запросов. Подождите перед повтором.'),
+    SLOT_UNAVAILABLE: t('Это время уже занято. Исходная запись сохранена.'),
+    VERSION_CONFLICT: t('Запись изменена другим сотрудником. Обновите карточку.'),
+    SCHEDULE_HAS_APPOINTMENTS: t(
       'Изменение оставит приёмы вне расписания. Сначала перенесите или отмените их.',
-    SCHEDULE_OVERLAP: 'Рабочие интервалы пересекаются.',
-    LAST_ADMIN_REQUIRED: 'Нельзя отключить или понизить последнего ADMIN.',
-    CREDENTIALS_NOT_PROVISIONED: 'Сначала оператор должен выдать пароль и MFA через CLI.',
-    DUPLICATE_RESOURCE: 'Такой email или slug уже существует.',
-    OFFER_CHANGED: 'Цена или длительность изменились. Выберите время заново.',
-    INVALID_STATUS_TRANSITION: 'Переход статуса недоступен в текущем состоянии или времени.',
-    INVALID_INPUT: 'Проверьте поля и формат данных.',
-    CONTACTS_UNAVAILABLE: 'Контакты недоступны. Обратитесь к ответственному за ключи.',
+    ),
+    SCHEDULE_OVERLAP: t('Рабочие интервалы пересекаются.'),
+    LAST_ADMIN_REQUIRED: t('Нельзя отключить или понизить последнего ADMIN.'),
+    CREDENTIALS_NOT_PROVISIONED: t('Сначала оператор должен выдать пароль и MFA через CLI.'),
+    DUPLICATE_RESOURCE: t('Такой email или slug уже существует.'),
+    OFFER_CHANGED: t('Цена или длительность изменились. Выберите время заново.'),
+    INVALID_STATUS_TRANSITION: t('Переход статуса недоступен в текущем состоянии или времени.'),
+    INVALID_INPUT: t('Проверьте поля и формат данных.'),
+    CONTACTS_UNAVAILABLE: t('Контакты недоступны. Обратитесь к ответственному за ключи.'),
   };
-  return messages[error.code] ?? 'Операция не выполнена. Обновите данные и повторите.';
+  return messages[error.code] ?? t('Операция не выполнена. Обновите данные и повторите.');
 }
 export const statuses = {
-  PENDING: 'Ожидает подтверждения',
-  CONFIRMED: 'Подтверждена',
-  CANCELLED: 'Отменена',
-  COMPLETED: 'Завершена',
-  NO_SHOW: 'Неявка',
+  PENDING: t('Ожидает подтверждения'),
+  CONFIRMED: t('Подтверждена'),
+  CANCELLED: t('Отменена'),
+  COMPLETED: t('Завершена'),
+  NO_SHOW: t('Неявка'),
 };
 export function clinicDay() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date());
@@ -140,7 +149,7 @@ export function range(date: string, days = 1) {
   };
 }
 export function time(value: string) {
-  return new Intl.DateTimeFormat('ru-KZ', {
+  return new Intl.DateTimeFormat(adminLocale() === 'kk' ? 'kk-KZ' : 'ru-KZ', {
     timeZone: 'Asia/Almaty',
     day: '2-digit',
     month: '2-digit',

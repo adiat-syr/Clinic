@@ -1,3 +1,4 @@
+import { translate as t, adminHref, adminLocale } from './i18n';
 import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { adminRequest, identitySchema, message, type Identity } from './api';
@@ -38,17 +39,17 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
   }
   return (
     <main className="admin-login">
-      <a className="brand" href="/ru">
+      <a className="brand" href={'/' + adminLocale()}>
         ✚ ALATAU CLINIC
       </a>
       <form className="panel" onSubmit={submit}>
-        <span className="badge">Рабочее пространство</span>
-        <h1>{challenge ? 'Подтверждение MFA' : 'Вход сотрудника'}</h1>
-        <p>Только уполномоченные сотрудники. Синтетическая среда.</p>
+        <span className="badge">{t('Рабочее пространство')}</span>
+        <h1>{challenge ? t('Подтверждение MFA') : t('Вход сотрудника')}</h1>
+        <p>{t('Только уполномоченные сотрудники. Синтетическая среда.')}</p>
         {challenge ? (
           <>
             <label>
-              Код MFA
+              {t('Код MFA')}
               <input
                 autoComplete="one-time-code"
                 inputMode="numeric"
@@ -60,7 +61,9 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
               />
             </label>
             <p>
-              Введите новый 6-значный код из Authenticator. Уже использованный код не принимается.
+              {t(
+                'Введите новый 6-значный код из Authenticator. Уже использованный код не принимается.',
+              )}
             </p>
             <button
               type="button"
@@ -71,7 +74,7 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
                 setError('');
               }}
             >
-              Начать вход заново
+              {t('Начать вход заново')}
             </button>
           </>
         ) : (
@@ -87,7 +90,7 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
               />
             </label>
             <label>
-              Пароль
+              {t('Пароль')}
               <input
                 type="password"
                 autoComplete="current-password"
@@ -105,11 +108,12 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
           </p>
         )}
         <button className="button wide" disabled={busy}>
-          {busy ? 'Проверяем…' : challenge ? 'Подтвердить MFA' : 'Войти'}
+          {busy ? t('Проверяем…') : challenge ? t('Подтвердить MFA') : t('Войти')}
         </button>
         <p>
-          Первый ADMIN и восстановление пароля/MFA — через защищённую CLI оператора, без стандартных
-          паролей.
+          {t(
+            'Первый ADMIN и восстановление пароля/MFA — через защищённую CLI оператора, без стандартных паролей.',
+          )}
         </p>
       </form>
     </main>
@@ -136,10 +140,10 @@ function Profile({ expire }: { expire: () => void }) {
           });
       }}
     >
-      <h1>Смена пароля</h1>
-      <p>Все ваши сессии будут отозваны. Новый пароль: 16–128 символов.</p>
+      <h1>{t('Смена пароля')}</h1>
+      <p>{t('Все ваши сессии будут отозваны. Новый пароль: 16–128 символов.')}</p>
       <label>
-        Текущий пароль
+        {t('Текущий пароль')}
         <input
           type="password"
           autoComplete="current-password"
@@ -149,7 +153,7 @@ function Profile({ expire }: { expire: () => void }) {
         />
       </label>
       <label>
-        Новый пароль
+        {t('Новый пароль')}
         <input
           type="password"
           autoComplete="new-password"
@@ -162,7 +166,7 @@ function Profile({ expire }: { expire: () => void }) {
       </label>
       {error && <p role="alert">{error}</p>}
       <button className="button" disabled={busy}>
-        Сменить пароль и выйти
+        {t('Сменить пароль и выйти')}
       </button>
     </form>
   );
@@ -183,7 +187,7 @@ export default function Admin() {
     client.clear();
     setMe(null);
     setChecking(false);
-    setNotice('Сессия завершена. Войдите заново.');
+    setNotice(t('Сессия завершена. Войдите заново.'));
   }
   useEffect(() => {
     let active = true;
@@ -210,7 +214,7 @@ export default function Admin() {
       client.clear();
       setMe(null);
       setChecking(false);
-      setNotice('Сессия истекла или доступ изменён. Войдите заново.');
+      setNotice(t('Сессия истекла или доступ изменён. Войдите заново.'));
     };
     const visibility = () => {
       setVisible(!document.hidden);
@@ -250,7 +254,7 @@ export default function Admin() {
   if (checking)
     return (
       <main className="admin-login">
-        <p role="status">Проверяем сессию…</p>
+        <p role="status">{t('Проверяем сессию…')}</p>
       </main>
     );
   if (!me)
@@ -280,26 +284,26 @@ export default function Admin() {
       ...(admin ? ['doctors', 'services', 'staff', 'audit'] : []),
     ];
   const menu = [
-    ['appointments', 'Записи на приём'],
-    ['schedule', 'Календарь врачей'],
+    ['appointments', t('Записи на приём')],
+    ['schedule', t('Календарь врачей')],
     ...(admin
       ? [
-          ['doctors', 'Врачи клиники'],
-          ['services', 'Услуги и цены'],
-          ['staff', 'Сотрудники'],
-          ['audit', 'Аудит'],
+          ['doctors', t('Врачи клиники')],
+          ['services', t('Услуги и цены')],
+          ['staff', t('Сотрудники')],
+          ['audit', t('Аудит')],
         ]
       : []),
-    ['profile', 'Мой пароль'],
+    ['profile', t('Мой пароль')],
   ];
   return (
     <QueryClientProvider client={client}>
       <div className="admin-shell">
         <header className="admin-header">
-          <a className="brand" href="/admin">
-            ✚ Alatau Clinic <small>Регистратура</small>
+          <a className="brand" href={adminHref('/admin')}>
+            ✚ Alatau Clinic <small>{t('Регистратура')}</small>
           </a>
-          <span className="badge">Синтетическая среда · Asia/Almaty</span>
+          <span className="badge">{t('Синтетическая среда · Asia/Almaty')}</span>
           <span>
             {me.email} · {me.role}
           </span>
@@ -310,39 +314,41 @@ export default function Admin() {
                 .catch(() => {
                   expire();
                   setNotice(
-                    'Не удалось подтвердить выход на сервере. Повторите выход после восстановления связи.',
+                    t(
+                      'Не удалось подтвердить выход на сервере. Повторите выход после восстановления связи.',
+                    ),
                   );
                 });
             }}
           >
-            Выйти
+            {t('Выйти')}
           </button>
         </header>
         <aside className="admin-nav">
-          <p>МЕНЮ КЛИНИКИ</p>
+          <p>{t('МЕНЮ КЛИНИКИ')}</p>
           <nav>
             {menu.map(([path, label]) => (
               <a
                 key={path}
-                href={'/admin/' + path}
+                href={adminHref('/admin/' + path)}
                 aria-current={section === path ? 'page' : undefined}
               >
                 {label}
               </a>
             ))}
           </nav>
-          <a href="/ru">Открыть клиентский сайт</a>
+          <a href={'/' + adminLocale()}>{t('Открыть клиентский сайт')}</a>
         </aside>
         <main className="admin-content">
           {!visible ? (
-            <p>Экран скрыт до повторной проверки сессии.</p>
+            <p>{t('Экран скрыт до повторной проверки сессии.')}</p>
           ) : restricted && !admin ? (
             <section className="panel">
-              <h1>Недостаточно прав</h1>
-              <p>Эта операция доступна только ADMIN.</p>
+              <h1>{t('Недостаточно прав')}</h1>
+              <p>{t('Эта операция доступна только ADMIN.')}</p>
             </section>
           ) : !allowed.includes(section) ? (
-            <h1>Страница не найдена</h1>
+            <h1>{t('Страница не найдена')}</h1>
           ) : section === 'appointments' ? (
             <Appointments admin={admin} />
           ) : section === 'schedule' ? (

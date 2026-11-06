@@ -15,7 +15,9 @@
     "db:seed": "prisma generate && prisma db seed",
     "db:validate": "prisma validate",
     "db:check": "node --env-file=../../.env --import tsx scripts/check-database.ts",
-    "consent:publish": "node --env-file=../../.env --import tsx scripts/consent.ts"
+    "consent:publish": "node --env-file=../../.env --import tsx scripts/consent.ts",
+    "staff:recover-admin": "node --env-file=../../.env --import tsx scripts/staff.ts recover-admin",
+    "staff:email": "node --env-file=../../.env --import tsx scripts/staff.ts change-email"
   },
   "dependencies": {
     "@clinic/contracts": "0.1.0",

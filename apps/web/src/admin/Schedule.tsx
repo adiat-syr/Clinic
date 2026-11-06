@@ -1,3 +1,4 @@
+import { translate as t, labelName, adminLocale } from './i18n';
 import { useLoad } from './useLoad';
 import { useState } from 'react';
 import { doctors, availabilitySchema, request } from '../api/clinic';
@@ -70,11 +71,11 @@ export function Schedule() {
   }
   return (
     <>
-      <h1>Календарь врачей</h1>
-      <p>Время клиники: Asia/Almaty. Для свободных интервалов выберите врача и услугу.</p>
+      <h1>{t('Календарь врачей')}</h1>
+      <p>{t('Время клиники: Asia/Almaty. Для свободных интервалов выберите врача и услугу.')}</p>
       <section className="panel admin-filters">
         <label>
-          Дата календаря
+          {t('Дата календаря')}
           <input
             type="date"
             value={date}
@@ -85,7 +86,7 @@ export function Schedule() {
           />
         </label>
         <label>
-          Период
+          {t('Период')}
           <select
             value={days}
             onChange={(e) => {
@@ -93,14 +94,14 @@ export function Schedule() {
               setPage(1);
             }}
           >
-            <option value={1}>День</option>
-            <option value={7}>Неделя</option>
+            <option value={1}>{t('День')}</option>
+            <option value={7}>{t('Неделя')}</option>
           </select>
         </label>
         <label>
-          Врач календаря
+          {t('Врач календаря')}
           <select
-            aria-label="Врач календаря"
+            aria-label={t('Врач календаря')}
             value={doctor}
             onChange={(e) => {
               setDoctor(e.target.value);
@@ -108,27 +109,27 @@ export function Schedule() {
               setPage(1);
             }}
           >
-            <option value="">Все врачи</option>
+            <option value="">{t('Все врачи')}</option>
             {team.data?.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.nameRu}
+                {labelName(d)}
               </option>
             ))}
           </select>
         </label>
         <label>
-          Услуга для доступности
+          {t('Услуга для доступности')}
           <select
-            aria-label="Услуга для доступности"
+            aria-label={t('Услуга для доступности')}
             value={service}
             onChange={(e) => setService(e.target.value)}
           >
-            <option value="">Выберите услугу</option>
+            <option value="">{t('Выберите услугу')}</option>
             {team.data
               ?.find((d) => d.id === doctor)
               ?.services.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nameRu}
+                  {labelName(s)}
                 </option>
               ))}
           </select>
@@ -136,11 +137,15 @@ export function Schedule() {
       </section>
       <div className="admin-two">
         <section className="panel">
-          <h2>Рабочие интервалы</h2>
+          <h2>{t('Рабочие интервалы')}</h2>
           <LoadState {...windows} retry={windows.refresh} />
           {windows.data?.items.map((w) => (
             <article className="admin-row" key={w.id}>
-              <strong>{team.data?.find((d) => d.id === w.doctorId)?.nameRu ?? w.doctorId}</strong>
+              <strong>
+                {team.data?.find((d) => d.id === w.doctorId)?.[
+                  adminLocale() === 'kk' ? 'nameKk' : 'nameRu'
+                ] ?? w.doctorId}
+              </strong>
               <p>
                 {time(w.startsAt)} — {time(w.endsAt)}
               </p>
@@ -152,20 +157,20 @@ export function Schedule() {
                   setEnd(local(w.endsAt));
                 }}
               >
-                Изменить интервал
+                {t('Изменить интервал')}
               </button>
               <button className="danger" onClick={() => setRemove(w.id)}>
-                Удалить интервал
+                {t('Удалить интервал')}
               </button>
             </article>
           ))}
-          {windows.data && !windows.data.items.length && <p>Рабочих интервалов нет.</p>}
+          {windows.data && !windows.data.items.length && <p>{t('Рабочих интервалов нет.')}</p>}
           {windows.data && (
             <Pager page={page} total={windows.data.pagination.total} setPage={setPage} />
           )}
         </section>
         <section className="panel">
-          <h2>Приёмы за период</h2>
+          <h2>{t('Приёмы за период')}</h2>
           <LoadState {...bookings} retry={bookings.refresh} />
           {bookings.data?.items.map((b) => (
             <article className="admin-row" key={b.id}>
@@ -174,8 +179,10 @@ export function Schedule() {
               </strong>
               <p>
                 {statuses[b.status]} ·{' '}
-                {b.doctorNameRu ??
-                  team.data?.find((d) => d.id === b.doctorId)?.nameRu ??
+                {(adminLocale() === 'kk' ? b.doctorNameKk : b.doctorNameRu) ??
+                  team.data?.find((d) => d.id === b.doctorId)?.[
+                    adminLocale() === 'kk' ? 'nameKk' : 'nameRu'
+                  ] ??
                   b.doctorId}
               </p>
             </article>
@@ -183,7 +190,7 @@ export function Schedule() {
           {bookings.data && (
             <Pager page={page} total={bookings.data.pagination.total} setPage={setPage} />
           )}
-          <h3>Свободное время выбранного дня</h3>
+          <h3>{t('Свободное время выбранного дня')}</h3>
           <LoadState {...slots} retry={slots.refresh} />
           <div className="slots">
             {slots.data?.slots.map((s) => (
@@ -192,7 +199,7 @@ export function Schedule() {
               </span>
             ))}
           </div>
-          {slots.data && !slots.data.slots.length && <p>Свободного времени нет.</p>}
+          {slots.data && !slots.data.slots.length && <p>{t('Свободного времени нет.')}</p>}
         </section>
       </div>
       <form
@@ -201,7 +208,7 @@ export function Schedule() {
           e.preventDefault();
           setError('');
           if (!doctor || !start || !end) {
-            setError('Выберите врача и границы интервала.');
+            setError(t('Выберите врача и границы интервала.'));
             return;
           }
           setBusy(true);
@@ -224,10 +231,12 @@ export function Schedule() {
             .finally(() => setBusy(false));
         }}
       >
-        <h2>{edit ? 'Изменение интервала' : 'Добавить рабочий интервал'}</h2>
-        <p>Перерыв — разрыв между интервалами. Занятые приёмы нельзя оставлять вне расписания.</p>
+        <h2>{edit ? t('Изменение интервала') : t('Добавить рабочий интервал')}</h2>
+        <p>
+          {t('Перерыв — разрыв между интервалами. Занятые приёмы нельзя оставлять вне расписания.')}
+        </p>
         <label>
-          Начало
+          {t('Начало')}
           <input
             type="datetime-local"
             required
@@ -236,7 +245,7 @@ export function Schedule() {
           />
         </label>
         <label>
-          Окончание
+          {t('Окончание')}
           <input
             type="datetime-local"
             required
@@ -248,17 +257,17 @@ export function Schedule() {
         <div className="admin-actions">
           {edit && (
             <button type="button" onClick={() => setEdit(null)}>
-              Отменить редактирование
+              {t('Отменить редактирование')}
             </button>
           )}
           <button className="button" disabled={busy}>
-            {edit ? 'Сохранить интервал' : 'Добавить интервал'}
+            {edit ? t('Сохранить интервал') : t('Добавить интервал')}
           </button>
         </div>
       </form>
       {remove && (
         <Confirm
-          title="Удалить рабочий интервал?"
+          title={t('Удалить рабочий интервал?')}
           onClose={() => setRemove('')}
           onConfirm={async () => {
             await adminRequest('/admin/availability-windows/' + remove, 'DELETE', {});
@@ -266,7 +275,7 @@ export function Schedule() {
             reload();
           }}
         >
-          <p>Операция отклоняется, если существующий приём останется вне работы.</p>
+          <p>{t('Операция отклоняется, если существующий приём останется вне работы.')}</p>
         </Confirm>
       )}
     </>

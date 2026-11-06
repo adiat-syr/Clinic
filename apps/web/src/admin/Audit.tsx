@@ -1,3 +1,4 @@
+import { translate as t } from './i18n';
 import { useLoad } from './useLoad';
 import { useState } from 'react';
 import { adminRequest, auditSchema, pageSchema, clinicDay, range, time } from './api';
@@ -18,12 +19,14 @@ export function Audit() {
   );
   return (
     <>
-      <h1>Аудит действий</h1>
+      <h1>{t('Аудит действий')}</h1>
       <p>
-        Технические события без контактов, паролей и значений полей. Чтение журнала тоже аудируется.
+        {t(
+          'Технические события без контактов, паролей и значений полей. Чтение журнала тоже аудируется.',
+        )}
       </p>
       <label>
-        Дата аудита
+        {t('Дата аудита')}
         <input
           type="date"
           required
@@ -40,11 +43,11 @@ export function Audit() {
           <table>
             <thead>
               <tr>
-                <th>Время</th>
-                <th>Действие</th>
-                <th>Объект</th>
-                <th>Сотрудник</th>
-                <th>Поля / requestId</th>
+                <th>{t('Время')}</th>
+                <th>{t('Действие')}</th>
+                <th>{t('Объект')}</th>
+                <th>{t('Сотрудник')}</th>
+                <th>{t('Поля / requestId')}</th>
               </tr>
             </thead>
             <tbody>
@@ -56,7 +59,7 @@ export function Audit() {
                     {r.entityType}
                     <small>{r.entityId}</small>
                   </td>
-                  <td className="admin-reference">{r.actorUserId ?? 'Система'}</td>
+                  <td className="admin-reference">{r.actorUserId ?? t('Система')}</td>
                   <td>
                     {r.metadata.fields?.join(', ')}
                     <small className="admin-reference">{r.requestId}</small>

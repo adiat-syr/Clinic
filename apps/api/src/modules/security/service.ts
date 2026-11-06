@@ -13,7 +13,13 @@ import {
   totpCounter,
 } from './crypto.js';
 import { lockStaff, lockStaffManagement, writeAudit } from './repository.js';
-import { credentialsSchema, loginSchema, mfaCodeSchema, passwordChangeSchema } from './input.js';
+import {
+  credentialsSchema,
+  loginSchema,
+  mfaCodeSchema,
+  passwordChangeSchema,
+  operatorEmailChangeSchema,
+} from './input.js';
 import { DatabaseRateLimiter } from './rate-limit.js';
 
 const MINUTE = 60000;
@@ -252,6 +258,33 @@ export class AuthService {
       });
       await writeAudit(tx, 'STAFF_BOOTSTRAPPED', 'staff', id, randomUUID(), id);
       return { id };
+    });
+  }
+
+  // Private operator CLI only; deliberately not exposed through HTTP.
+  async changeStaffEmail(input: unknown) {
+    const command = validated(operatorEmailChangeSchema, input);
+    if (command.email === command.newEmail) throw new AccessError(400, 'EMAIL_UNCHANGED');
+    return withTransaction(this.client, async (tx) => {
+      await lockStaffManagement(tx);
+      const target = await tx.staffUser.findUnique({
+        where: { email: command.email },
+        select: { id: true },
+      });
+      if (!target) throw new AccessError(404, 'NOT_FOUND');
+      await lockStaff(tx, [target.id]);
+      if (
+        await tx.staffUser.findUnique({ where: { email: command.newEmail }, select: { id: true } })
+      )
+        throw new AccessError(409, 'EMAIL_ALREADY_USED');
+      await tx.staffUser.update({ where: { id: target.id }, data: { email: command.newEmail } });
+      await tx.staffSession.updateMany({
+        where: { userId: target.id, revokedAt: null },
+        data: { revokedAt: this.now() },
+      });
+      await writeAudit(tx, 'STAFF_EMAIL_CHANGED', 'staff', target.id, randomUUID(), null, [
+        'email',
+      ]);
     });
   }
 

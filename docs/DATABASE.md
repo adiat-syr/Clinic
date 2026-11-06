@@ -110,3 +110,7 @@ npm run dev
 Booking/schedule HTTP подключены через BookingHttpService и существующий BookingService.inTransaction: staff/session locks, затем прежние doctor/service/appointment locks и audit actor в одном commit. Public create сохраняет idempotency advisory lock первым. Самостоятельные вызовы core по-прежнему открывают собственную транзакцию с прежними retries/timeouts. Новых моделей/миграций этап 4 не требует; все 3 миграции и 13 моделей сохранены. Предыдущие указания «booking HTTP пока 404» в описании этапов 2–3 являются историческими.
 
 Контакты HTTP шифруются ContactPrivacy, раздельные versioned keys и HMAC в окружении; syntheticContacts остаётся только fixture и к runtime не подключается. Отзыв согласия увеличивает version, сохраняет доказательство и статус записи; purge/retention не выдумываются. Подробный контракт и ограничения — BOOKING-API.md. После этапа 4 требуется подтверждение этапа 5.
+
+## Дополнение MVP: подтверждение пациента
+
+Добавлена четвёртая миграция и 14-я модель PatientConsentReceipt: codeHash (SHA-256, PK), documentId FK/index, locale, acceptedAt/expiresAt (ровно 5 минут), зашифрованные имя/телефон, версия ключа и HMAC fingerprint, consumedAt и unique appointmentId FK. Строки доказательств неизменяемы; разрешён один переход потребления под lock, CHECK требует согласованных полей и срока. Подробности — PHONE-BOOKING.md. Существующие exclusions, deferred appointment consent и прошлые миграции сохранены; тестовая очистка учитывает новый FK. Runtime GRANT и cleanup/retention новой таблицы ещё требуют приёмки этапа 7.

@@ -1,7 +1,7 @@
 import type { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import type { AuthService } from '../security/service.js';
-import { validated } from '../security/errors.js';
+import { validated, AccessError } from '../security/errors.js';
 import type { BookingHttpService } from './http-service.js';
 import type { Transaction } from './transaction.js';
 export function registerBookingRoutes(
@@ -41,6 +41,21 @@ export function registerBookingRoutes(
     empty(req.query);
     await auth.limiter.require('booking-ip', req.ip ?? 'unknown', 20, 15 * 60000);
     const result = await booking.create(req.body, req.get('idempotency-key'));
+    res.status(result.replayed ? 200 : 201).json(result.body);
+  });
+  router.post('/patient-consent-codes', async (req, res) => {
+    csrf(req);
+    empty(req.query);
+    // This endpoint records a separate patient action, never an authenticated staff attestation.
+    if (session(req)) throw new AccessError(403, 'PATIENT_ACTION_REQUIRED');
+    await auth.limiter.require('patient-consent-ip', req.ip ?? 'unknown', 6, 15 * 60000);
+    res.status(201).json(await booking.issueConsentCode(req.body));
+  });
+  router.post('/admin/appointments', async (req, res) => {
+    await auth.limiter.require('staff-booking-ip', req.ip ?? 'unknown', 20, 15 * 60000);
+    const result = await work(req, res, (tx, actor) =>
+      booking.staffCreate(tx, req.body, req.get('idempotency-key'), actor, requestId(res)),
+    );
     res.status(result.replayed ? 200 : 201).json(result.body);
   });
   router.get('/admin/availability-windows', async (req, res) =>

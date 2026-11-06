@@ -1,4 +1,3 @@
-import { AdminEntry } from './admin/Entry';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +6,7 @@ import '@fontsource-variable/plus-jakarta-sans';
 import { z } from 'zod/mini';
 import { serviceSchema, doctorSchema } from './api/clinic';
 import { App } from './app/App';
+import { StaffEntry } from './app/StaffEntry';
 import './styles/tokens.css';
 import './styles/global.css';
 
@@ -16,7 +16,12 @@ if (!root) throw new Error('Application root is missing');
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15000, refetchOnWindowFocus: false } },
 });
-document.documentElement.lang = location.pathname.startsWith('/kk') ? 'kk' : 'ru';
+document.documentElement.lang =
+  location.pathname.startsWith('/kk') ||
+  (location.pathname.startsWith('/admin') &&
+    new URLSearchParams(location.search).get('lang') === 'kk')
+    ? 'kk'
+    : 'ru';
 const snapshot = document.getElementById('catalog-data');
 if (snapshot?.textContent) {
   try {
@@ -34,7 +39,7 @@ if (snapshot?.textContent) {
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      {location.pathname.startsWith('/admin') ? <AdminEntry /> : <App />}
+      {location.pathname.startsWith('/admin') ? <StaffEntry /> : <App />}
     </QueryClientProvider>
   </React.StrictMode>,
 );

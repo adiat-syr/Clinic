@@ -150,7 +150,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   clock = new Date('2030-01-01T00:00:00Z');
   logs.length = 0;
-  await db.$executeRaw`TRUNCATE TABLE bootstrap_state,rate_limit_buckets,audit_events,idempotency_keys,appointment_consents,appointments,availability_windows,doctor_services,doctors,services,staff_sessions,staff_users,consent_documents`;
+  await db.$executeRaw`TRUNCATE TABLE patient_consent_receipts,bootstrap_state,rate_limit_buckets,audit_events,idempotency_keys,appointment_consents,appointments,availability_windows,doctor_services,doctors,services,staff_sessions,staff_users,consent_documents`;
   await seedSyntheticClinic(db, new Date('2030-01-02T00:00:00Z'), clock);
   password = `SYNTHETIC-${randomBytes(24).toString('base64url')}`;
   rootSecret = new OTPAuth.Secret({ size: 20 }).base32;
@@ -209,6 +209,193 @@ async function createBooking(
   await browser.csrf();
   return browser.send('POST', '/appointments', data, { headers: { 'idempotency-key': key } });
 }
+async function patientCode(browser = new Client()) {
+  await browser.csrf();
+  const { contacts, consent } = payload();
+  const response = await browser.send('POST', '/patient-consent-codes', { contacts, consent });
+  expect(response.status).toBe(201);
+  return z
+    .object({ code: z.string(), expiresAt: z.string(), documentVersion: z.string() })
+    .parse(await response.json());
+}
+function staffCreate(
+  browser: Client,
+  consentCode: string,
+  key = randomBytes(16).toString('hex'),
+  extra: Record<string, unknown> = {},
+) {
+  return browser.send(
+    'POST',
+    '/admin/appointments',
+    { ...selection(), consentCode, ...extra },
+    { headers: { 'idempotency-key': key } },
+  );
+}
+describe('self-service consent and additional staff booking', () => {
+  it('binds independent consent and encrypted contacts to staff creation', async () => {
+    const receipt = await patientCode(),
+      acceptedAt = clock;
+    expect(Date.parse(receipt.expiresAt) - acceptedAt.getTime()).toBe(5 * 60000);
+    const staff = await logged('RECEPTIONIST'),
+      result = await staffCreate(staff, receipt.code);
+    expect(result.status).toBe(201);
+    expect(result.headers.get('cache-control')).toContain('no-store');
+    const body = await result.text();
+    expect(body.includes(receipt.code)).toBe(false);
+    expect(body.includes(payload().contacts.name)).toBe(false);
+    const row = await db.appointment.findFirstOrThrow({
+      include: { consent: true, patientConsentReceipt: true },
+    });
+    expect(row.consent?.acceptedAt.toISOString()).toBe(acceptedAt.toISOString());
+    expect(row.consent?.documentId).toBe(syntheticIds.consent);
+    expect(row.patientConsentReceipt?.consumedAt).not.toBeNull();
+    const stored = await db.patientConsentReceipt.findFirstOrThrow();
+    expect(JSON.stringify(stored).includes(receipt.code)).toBe(false);
+    expect(JSON.stringify(stored).includes(payload().contacts.name)).toBe(false);
+    expect(
+      (await db.auditEvent.findFirstOrThrow({ where: { action: 'STAFF_APPOINTMENT_CREATED' } }))
+        .actorUserId,
+    ).toBe(receptionistId);
+    expect(logs.join('').includes(receipt.code)).toBe(false);
+  });
+  it('rejects missing consent, staff attestation, contact overrides, anonymous create and CSRF', async () => {
+    const patient = new Client();
+    await patient.csrf();
+    const { contacts, consent } = payload();
+    expect(
+      (
+        await patient.send('POST', '/patient-consent-codes', {
+          contacts,
+          consent: { ...consent, accepted: false },
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await patient.send('POST', '/patient-consent-codes', { contacts, consent }, { csrf: false }))
+        .status,
+    ).toBe(403);
+    const staff = await logged();
+    expect((await staff.send('POST', '/patient-consent-codes', { contacts, consent })).status).toBe(
+      403,
+    );
+    const receipt = await patientCode();
+    expect((await staffCreate(patient, receipt.code)).status).toBe(401);
+    expect((await staffCreate(staff, receipt.code, undefined, { contacts })).status).toBe(400);
+    expect((await staffCreate(staff, receipt.code, undefined, { consent })).status).toBe(400);
+    expect(
+      (
+        await staff.send(
+          'POST',
+          '/admin/appointments',
+          { ...selection(), consentCode: receipt.code },
+          { csrf: false },
+        )
+      ).status,
+    ).toBe(403);
+    expect(await db.appointment.count()).toBe(0);
+  });
+  it('expires at exactly five minutes and rejects unknown code without records', async () => {
+    const staff = await logged(),
+      receipt = await patientCode();
+    advance(5 * 60000);
+    expect((await staffCreate(staff, receipt.code)).status).toBe(409);
+    expect((await staffCreate(staff, '0'.repeat(32))).status).toBe(409);
+    expect(await db.appointment.count()).toBe(0);
+    expect(await db.appointmentConsent.count()).toBe(0);
+    expect(await db.idempotencyKey.count()).toBe(0);
+  });
+  it('rejects a retired document for issuing and consuming a code', async () => {
+    const staff = await logged(),
+      receipt = await patientCode();
+    await booking.publish({
+      version: 'synthetic-next',
+      textRu: 'Тестовая новая версия согласия только для синтетических данных.',
+      textKk: 'Синтетикалық деректерге арналған келісімнің жаңа сынақ нұсқасы.',
+    });
+    expect((await staffCreate(staff, receipt.code)).status).toBe(409);
+    const patient = new Client();
+    await patient.csrf();
+    const { contacts, consent } = payload();
+    expect(
+      (await patient.send('POST', '/patient-consent-codes', { contacts, consent })).status,
+    ).toBe(409);
+    expect(await db.appointment.count()).toBe(0);
+  });
+  it('uses a code once but permits identical transport retry of an already committed booking', async () => {
+    const staff = await logged(),
+      receipt = await patientCode(),
+      key = randomBytes(16).toString('hex');
+    const first = await staffCreate(staff, receipt.code, key);
+    expect(first.status).toBe(201);
+    const result = await json(first);
+    advance(6 * 60000);
+    const retry = await staffCreate(staff, receipt.code, key);
+    expect(retry.status).toBe(200);
+    expect(await json(retry)).toEqual(result);
+    expect((await staffCreate(staff, receipt.code)).status).toBe(409);
+    expect(await db.appointment.count()).toBe(1);
+    expect(await db.appointmentConsent.count()).toBe(1);
+    expect(await db.auditEvent.count({ where: { action: 'STAFF_APPOINTMENT_CREATED' } })).toBe(1);
+  });
+  it('rolls back receipt consumption on conflict, allowing selection of another free slot', async () => {
+    expect((await createBooking(new Client())).status).toBe(201);
+    const staff = await logged(),
+      receipt = await patientCode();
+    expect((await staffCreate(staff, receipt.code)).status).toBe(409);
+    expect((await db.patientConsentReceipt.findFirstOrThrow()).consumedAt).toBeNull();
+    expect(
+      (await staffCreate(staff, receipt.code, undefined, { startsAt: '2030-01-02T04:30:00Z' }))
+        .status,
+    ).toBe(201);
+    expect(await db.appointment.count()).toBe(2);
+  });
+  it('coordinates twenty staff claims and a simultaneous online booking through one core', async () => {
+    const staff = await logged(),
+      receipt = await patientCode(),
+      patient = new Client();
+    await patient.csrf();
+    const results = await Promise.all([
+      ...Array.from({ length: 20 }, () => staffCreate(staff, receipt.code)),
+      patient.send('POST', '/appointments', payload(), {
+        headers: { 'idempotency-key': randomBytes(16).toString('hex') },
+      }),
+    ]);
+    expect(results.filter((r) => r.status === 201)).toHaveLength(1);
+    expect(results.filter((r) => r.status === 409)).toHaveLength(20);
+    expect(await db.appointment.count()).toBe(1);
+    expect(await db.appointmentConsent.count()).toBe(1);
+  });
+  it('enforces evidence immutability, FK and exact lifetime directly in PostgreSQL', async () => {
+    await patientCode();
+    const receipt = await db.patientConsentReceipt.findFirstOrThrow();
+    await expect(
+      db.patientConsentReceipt.update({
+        where: { codeHash: receipt.codeHash },
+        data: { expiresAt: new Date(clock.getTime() + 600000) },
+      }),
+    ).rejects.toBeDefined();
+    await expect(
+      db.patientConsentReceipt.create({
+        data: {
+          ...receipt,
+          codeHash: 'f'.repeat(64),
+          expiresAt: new Date(clock.getTime() + 600000),
+        },
+      }),
+    ).rejects.toBeDefined();
+    await expect(
+      db.patientConsentReceipt.create({
+        data: { ...receipt, codeHash: 'e'.repeat(64), documentId: randomUUID() },
+      }),
+    ).rejects.toBeDefined();
+    const constraints = await db.$queryRaw<
+      { conname: string }[]
+    >`SELECT conname FROM pg_constraint WHERE conrelid='patient_consent_receipts'::regclass`;
+    expect(constraints.some((c) => c.conname === 'patient_consent_receipt_lifetime')).toBe(true);
+    expect(constraints.some((c) => c.conname === 'patient_consent_receipt_consumption')).toBe(true);
+  });
+});
+
 describe('stage 4 HTTP booking and protected workflows', () => {
   it('staff retains readable catalogue labels after entities are archived', async () => {
     await createBooking(new Client());

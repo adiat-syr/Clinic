@@ -6,7 +6,9 @@ if (!url || !/^\/clinic_test_[a-f0-9]{32}$/.test(new URL(url).pathname))
 const db = new pg.Pool({ connectionString: url });
 test.afterAll(() => db.end());
 test.beforeEach(async () => {
-  await db.query('TRUNCATE idempotency_keys,appointment_consents,appointments');
+  await db.query(
+    'TRUNCATE patient_consent_receipts,idempotency_keys,appointment_consents,appointments',
+  );
   await db.query('DELETE FROM rate_limit_buckets');
 });
 async function select(page: Page) {

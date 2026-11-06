@@ -1,25 +1,26 @@
+import { translate as t, labelName, adminLocale } from './i18n';
 import { useLoad } from './useLoad';
 import { useState, type FormEvent } from 'react';
 import { adminRequest, adminDoctor, adminService, pageSchema, message } from './api';
 import { LoadState, Pager, Confirm } from './ui';
 const doctorFields = [
   ['slug', 'Slug'],
-  ['nameRu', 'Имя RU'],
-  ['nameKk', 'Имя KK'],
-  ['specialtyRu', 'Специальность RU'],
-  ['specialtyKk', 'Специальность KK'],
-  ['bioRu', 'Описание RU'],
-  ['bioKk', 'Описание KK'],
-  ['photoAssetKey', 'Локальный ключ фото'],
+  ['nameRu', t('Имя RU')],
+  ['nameKk', t('Имя KK')],
+  ['specialtyRu', t('Специальность RU')],
+  ['specialtyKk', t('Специальность KK')],
+  ['bioRu', t('Описание RU')],
+  ['bioKk', t('Описание KK')],
+  ['photoAssetKey', t('Локальный ключ фото')],
 ];
 const serviceFields = [
   ['slug', 'Slug'],
-  ['nameRu', 'Название RU'],
-  ['nameKk', 'Название KK'],
-  ['descriptionRu', 'Описание RU'],
-  ['descriptionKk', 'Описание KK'],
-  ['priceKzt', 'Цена KZT'],
-  ['durationMinutes', 'Длительность, минут'],
+  ['nameRu', t('Название RU')],
+  ['nameKk', t('Название KK')],
+  ['descriptionRu', t('Описание RU')],
+  ['descriptionKk', t('Описание KK')],
+  ['priceKzt', t('Цена KZT')],
+  ['durationMinutes', t('Длительность, минут')],
 ];
 type EditorState = { id?: string; values: Record<string, string>; active: boolean };
 export function Catalog({ kind }: { kind: 'doctors' | 'services' }) {
@@ -44,14 +45,15 @@ export function Catalog({ kind }: { kind: 'doctors' | 'services' }) {
   return (
     <>
       <div className="admin-title">
-        <h1>{kind === 'doctors' ? 'Врачи клиники' : 'Услуги и цены'}</h1>
+        <h1>{kind === 'doctors' ? t('Врачи клиники') : t('Услуги и цены')}</h1>
         <button className="button" onClick={() => setEditor({ values: {}, active: true })}>
-          Добавить {kind === 'doctors' ? 'врача' : 'услугу'}
+          {kind === 'doctors' ? t('Добавить врача') : t('Добавить услугу')}
         </button>
       </div>
       <p>
-        RU/KK и цены отображаются на клиентском сайте. Публичные SEO-снимки обновляются после
-        сборки.
+        {t(
+          'RU/KK и цены отображаются на клиентском сайте. Публичные SEO-снимки обновляются после сборки.',
+        )}
       </p>
       <LoadState {...rows} retry={rows.refresh} />
       <section className="panel">
@@ -59,25 +61,25 @@ export function Catalog({ kind }: { kind: 'doctors' | 'services' }) {
           <table>
             <thead>
               <tr>
-                <th>Наименование</th>
-                <th>Состояние</th>
-                <th>Условия</th>
-                <th>Действия</th>
+                <th>{t('Наименование')}</th>
+                <th>{t('Состояние')}</th>
+                <th>{t('Условия')}</th>
+                <th>{t('Действия')}</th>
               </tr>
             </thead>
             <tbody>
               {rows.data?.items.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    {row.nameRu}
-                    <small>{row.nameKk}</small>
+                    {labelName(row)}
+                    <small>{adminLocale() === 'kk' ? row.nameRu : row.nameKk}</small>
                   </td>
-                  <td>{row.isActive ? 'Активно' : 'Архив'}</td>
+                  <td>{row.isActive ? t('Активно') : t('Архив')}</td>
                   <td>
                     {'priceKzt' in row
-                      ? `${row.priceKzt} ₸ · ${row.durationMinutes} мин`
+                      ? `${row.priceKzt} ₸ · ${row.durationMinutes} ${t('мин')}`
                       : 'services' in row
-                        ? `${row.services.filter((s) => s.isActive && s.service.isActive).length} активных услуг`
+                        ? `${row.services.filter((s) => s.isActive && s.service.isActive).length} ${t('активных услуг')}`
                         : ''}
                   </td>
                   <td>
@@ -93,10 +95,10 @@ export function Catalog({ kind }: { kind: 'doctors' | 'services' }) {
                         });
                       }}
                     >
-                      Редактировать
+                      {t('Редактировать')}
                     </button>
                     {kind === 'doctors' && (
-                      <button onClick={() => setDoctor(row.id)}>Назначить услуги</button>
+                      <button onClick={() => setDoctor(row.id)}>{t('Назначить услуги')}</button>
                     )}
                   </td>
                 </tr>
@@ -185,7 +187,7 @@ function Editor({
   }
   return (
     <section className="panel admin-editor">
-      <h2>{initial.id ? 'Редактирование' : 'Новая запись каталога'}</h2>
+      <h2>{initial.id ? t('Редактирование') : t('Новая запись каталога')}</h2>
       <form onSubmit={submit}>
         {fields
           .filter(([key]) => !initial.id || key !== 'slug')
@@ -220,27 +222,28 @@ function Editor({
           ))}
         <label className="checkbox">
           <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          Активно
+          {t('Активно')}
         </label>
         {error && <p role="alert">{error}</p>}
         <div className="admin-actions">
           <button type="button" onClick={close}>
-            Закрыть
+            {t('Закрыть')}
           </button>
           <button className="button" disabled={busy}>
-            Сохранить
+            {t('Сохранить')}
           </button>
         </div>
       </form>
       {confirm && (
         <Confirm
-          title="Деактивировать запись каталога?"
+          title={t('Деактивировать запись каталога?')}
           onClose={() => setConfirm(false)}
           onConfirm={save}
         >
           <p>
-            Новые заявки будут недоступны. Уже созданные приёмы сохраняются: проверьте будущие
-            записи и при необходимости обработайте их отдельно.
+            {t(
+              'Новые заявки будут недоступны. Уже созданные приёмы сохраняются: проверьте будущие записи и при необходимости обработайте их отдельно.',
+            )}
           </p>
         </Confirm>
       )}
@@ -274,7 +277,7 @@ function Assignments({ id, close, done }: { id: string; close: () => void; done:
   }
   return (
     <section className="panel admin-editor">
-      <h2>Назначение услуги врачу</h2>
+      <h2>{t('Назначение услуги врачу')}</h2>
       <LoadState {...catalog} retry={catalog.refresh} />
       <form
         onSubmit={(e) => {
@@ -290,44 +293,48 @@ function Assignments({ id, close, done }: { id: string; close: () => void; done:
         }}
       >
         <label>
-          Назначаемая услуга
+          {t('Назначаемая услуга')}
           <select
-            aria-label="Назначаемая услуга"
+            aria-label={t('Назначаемая услуга')}
             required
             value={service}
             onChange={(e) => setService(e.target.value)}
           >
-            <option value="">Выберите услугу</option>
+            <option value="">{t('Выберите услугу')}</option>
             {catalog.data?.map((s) => (
               <option value={s.id} key={s.id}>
-                {s.nameRu}
-                {s.isActive ? '' : ' (архив)'}
+                {labelName(s)}
+                {s.isActive ? '' : t(' (архив)')}
               </option>
             ))}
           </select>
         </label>
         <label className="checkbox">
           <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          Назначение активно
+          {t('Назначение активно')}
         </label>
-        <p>Деактивация назначения не отменяет существующие приёмы.</p>
+        <p>{t('Деактивация назначения не отменяет существующие приёмы.')}</p>
         {error && <p role="alert">{error}</p>}
         <div className="admin-actions">
           <button type="button" onClick={close}>
-            Закрыть
+            {t('Закрыть')}
           </button>
           <button className="button" disabled={busy}>
-            Сохранить назначение
+            {t('Сохранить назначение')}
           </button>
         </div>
       </form>
       {confirm && (
         <Confirm
-          title="Деактивировать назначение?"
+          title={t('Деактивировать назначение?')}
           onClose={() => setConfirm(false)}
           onConfirm={save}
         >
-          <p>Новые заявки по этому назначению будут недоступны. Существующие приёмы сохраняются.</p>
+          <p>
+            {t(
+              'Новые заявки по этому назначению будут недоступны. Существующие приёмы сохраняются.',
+            )}
+          </p>
         </Confirm>
       )}
     </section>

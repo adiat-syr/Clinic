@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { PrismaClient, Prisma } from '../../generated/prisma/client.js';
 import { BookingService } from './service.js';
@@ -40,6 +40,15 @@ export const publicBookingSchema = selectionSchema.extend({
     locale: z.enum(['ru', 'kk']),
   }),
 });
+export const patientConsentSchema = publicBookingSchema.pick({ contacts: true, consent: true });
+export const staffBookingSchema = selectionSchema.extend({
+  consentCode: z.string().regex(/^[a-f0-9]{32}$/),
+});
+export function consentCodeHash(code: string) {
+  return createHash('sha256')
+    .update('clinic:patient-consent:' + code)
+    .digest('hex');
+}
 export const availabilityQuery = z.strictObject({
   doctorId: uuid,
   serviceId: uuid,
@@ -119,6 +128,79 @@ export class BookingHttpService {
   ) {
     this.privacy = new ContactPrivacy(config);
     this.core = new BookingService(client, { idempotencySecret: config.hmacKey, now });
+  }
+  async issueConsentCode(input: unknown) {
+    const command = validated(patientConsentSchema, input);
+    return withTransaction(this.client, async (tx) => {
+      const now = this.now();
+      await tx.$queryRaw`SELECT id FROM consent_documents WHERE id=${command.consent.documentId}::uuid FOR SHARE`;
+      const document = await tx.consentDocument.findUnique({
+        where: { id: command.consent.documentId },
+      });
+      if (!document || document.retiredAt || document.publishedAt > now)
+        throw new AccessError(409, 'CONSENT_CHANGED');
+      const code = randomBytes(16).toString('hex'),
+        expiresAt = new Date(now.getTime() + 5 * 60000);
+      await tx.patientConsentReceipt.create({
+        data: {
+          codeHash: consentCodeHash(code),
+          documentId: document.id,
+          locale: command.consent.locale,
+          acceptedAt: now,
+          expiresAt,
+          ...this.privacy.sealContacts(command.contacts),
+        },
+      });
+      return { code, expiresAt: expiresAt.toISOString(), documentVersion: document.version };
+    });
+  }
+  async staffCreate(
+    tx: Transaction,
+    input: unknown,
+    key: unknown,
+    actor: string,
+    requestId: string,
+  ) {
+    const command = validated(staffBookingSchema, input),
+      idempotencyKey = validated(z.string().regex(/^[a-fA-F0-9]{32,128}$/), key),
+      hash = consentCodeHash(command.consentCode),
+      receipt = await tx.patientConsentReceipt.findUnique({ where: { codeHash: hash } });
+    if (!receipt) throw new AccessError(409, 'CONSENT_CODE_UNAVAILABLE');
+    const row = await this.core.inTransaction(tx, actor, requestId).create({
+      doctorId: command.doctorId,
+      serviceId: command.serviceId,
+      startsAt: command.startsAt.toISOString(),
+      expectedPriceKzt: command.expectedPriceKzt,
+      expectedDurationMinutes: command.expectedDurationMinutes,
+      idempotencyKey,
+      contacts: {
+        patientNameCiphertext: receipt.patientNameCiphertext,
+        phoneCiphertext: receipt.phoneCiphertext,
+        encryptionKeyVersion: receipt.encryptionKeyVersion,
+        fingerprint: receipt.fingerprint,
+      },
+      consent: {
+        documentId: receipt.documentId,
+        locale: receipt.locale,
+        accepted: true,
+        receiptHash: hash,
+      },
+    });
+    if (!row.replayed)
+      await writeAudit(tx, 'STAFF_APPOINTMENT_CREATED', 'appointment', row.id, requestId, actor);
+    return {
+      body: {
+        reference: row.reference,
+        status: row.status,
+        doctorId: row.doctorId,
+        serviceId: row.serviceId,
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        priceKzt: row.priceKzt,
+        durationMinutes: row.durationMinutes,
+      },
+      replayed: row.replayed,
+    };
   }
   async create(input: unknown, key: unknown) {
     const command = validated(publicBookingSchema, input),
