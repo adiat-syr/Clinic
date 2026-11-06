@@ -1,0 +1,15 @@
+{
+  admin off
+  auto_https disable_redirects
+}
+import /etc/caddy/Caddyfile.site
+https://clinic.localhost {
+  tls internal
+  import site
+}
+http://clinic.localhost {
+  redir {$PUBLIC_ORIGIN}{uri} permanent
+}
+:8081 {
+  respond /healthz "ok" 200
+}

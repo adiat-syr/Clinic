@@ -397,6 +397,42 @@ describe('self-service consent and additional staff booking', () => {
 });
 
 describe('stage 4 HTTP booking and protected workflows', () => {
+  it('reuses one pool connection for protected booking mutations and pre-reads', async () => {
+    expect((await createBooking(new Client())).status).toBe(201);
+    const staff = await logged(),
+      row = await db.appointment.findFirstOrThrow(),
+      small = createPrisma(url, 1),
+      security = new AuthService(small, config, () => clock),
+      service = new BookingHttpService(small, booking.config, () => clock);
+    try {
+      await security.ready();
+      await security.withSession(staff.session(), { requestId: randomUUID() }, (tx, actor) =>
+        service.core
+          .inTransaction(tx, actor.id, randomUUID())
+          .transition({ appointmentId: row.id, version: 1, status: 'CONFIRMED' }),
+      );
+      await security.withSession(staff.session(), { requestId: randomUUID() }, (tx, actor) =>
+        service.core.inTransaction(tx, actor.id, randomUUID()).reschedule({
+          ...selection(),
+          appointmentId: row.id,
+          version: 2,
+          startsAt: '2030-01-02T04:30:00Z',
+        }),
+      );
+      const window = await db.availabilityWindow.findFirstOrThrow({
+        where: { doctorId: row.doctorId },
+      });
+      await security.withSession(staff.session(), { requestId: randomUUID() }, (tx, actor) =>
+        service.core.inTransaction(tx, actor.id, randomUUID()).replaceWindow(window.id, {
+          doctorId: window.doctorId,
+          startsAt: window.startsAt.toISOString(),
+          endsAt: window.endsAt.toISOString(),
+        }),
+      );
+    } finally {
+      await small.$disconnect();
+    }
+  });
   it('staff retains readable catalogue labels after entities are archived', async () => {
     await createBooking(new Client());
     const row = await db.appointment.findFirstOrThrow();
@@ -695,5 +731,94 @@ describe('stage 4 HTTP booking and protected workflows', () => {
       (await db.consentDocument.findUniqueOrThrow({ where: { id: syntheticIds.consent } }))
         .retiredAt,
     ).not.toBeNull();
+  });
+});
+
+describe('stage 7 privacy journal and SSR boundary', () => {
+  it('blocks online, receipt issuance and staff creation before clinic catalogue activation', async () => {
+    booking.onlineBookingAllowed = false;
+    try {
+      const publicClient = new Client();
+      await publicClient.csrf();
+      expect((await createBooking(publicClient)).status).toBe(503);
+      expect((await publicClient.send('POST', '/patient-consent-codes', {})).status).toBe(503);
+      const root = await logged();
+      expect(
+        (
+          await root.send(
+            'POST',
+            '/admin/appointments',
+            {},
+            { headers: { 'idempotency-key': randomBytes(32).toString('hex') } },
+          )
+        ).status,
+      ).toBe(503);
+      expect(await db.appointment.count()).toBe(0);
+      expect(await db.patientConsentReceipt.count()).toBe(0);
+      expect((await root.send('GET', '/admin/services')).status).toBe(200);
+    } finally {
+      booking.onlineBookingAllowed = true;
+    }
+  });
+  it('rejects excessive HTML requests before expensive rendering', async () => {
+    let calls = 0;
+    const server = createApp({
+      database: { ping: async () => {} },
+      security: auth,
+      site: {
+        render: async () => {
+          calls++;
+          return { status: 200, html: '<p>Synthetic</p>' };
+        },
+      },
+    }).listen(0, '127.0.0.1');
+    servers.push(server);
+    await once(server, 'listening');
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('Address unavailable');
+    const origin = `http://127.0.0.1:${address.port}`;
+    for (let i = 0; i < 120; i++) expect((await fetch(origin + '/ru')).status).toBe(200);
+    expect((await fetch(origin + '/ru')).status).toBe(429);
+    expect(calls).toBe(120);
+    expect((await fetch(origin + '/api/v1/health/ready')).status).toBe(200);
+  });
+  it('fails closed on unavailable withdrawal evidence, without leaking paths or mutating consent', async () => {
+    await createBooking(new Client());
+    const row = await db.appointment.findFirstOrThrow(),
+      root = await logged();
+    let recorded = 0;
+    booking.withdrawalJournal = {
+      withLock: (work) => work(),
+      record: async () => {
+        recorded++;
+        throw new Error('synthetic-secret-path-do-not-disclose');
+      },
+    };
+    try {
+      const reception = await logged('RECEPTIONIST');
+      expect(
+        (
+          await reception.send('POST', `/admin/appointments/${row.id}/consent-withdrawal`, {
+            version: 1,
+            confirmedIdentity: true,
+          })
+        ).status,
+      ).toBe(403);
+      expect(recorded).toBe(0);
+      const response = await root.send('POST', `/admin/appointments/${row.id}/consent-withdrawal`, {
+        version: 1,
+        confirmedIdentity: true,
+      });
+      expect(response.status).toBe(503);
+      expect(await response.text()).not.toContain('synthetic-secret-path');
+      expect(
+        (await db.appointmentConsent.findUniqueOrThrow({ where: { appointmentId: row.id } }))
+          .withdrawnAt,
+      ).toBeNull();
+      expect((await db.appointment.findUniqueOrThrow({ where: { id: row.id } })).version).toBe(1);
+      expect(recorded).toBe(1);
+    } finally {
+      delete booking.withdrawalJournal;
+    }
   });
 });

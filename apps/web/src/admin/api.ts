@@ -139,21 +139,54 @@ export const statuses = {
   NO_SHOW: t('Неявка'),
 };
 export function clinicDay() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date());
+  return new Intl.DateTimeFormat('en-CA', { timeZone: clinicZone() }).format(new Date());
 }
 export function range(date: string, days = 1) {
-  const start = new Date(date + 'T00:00:00+05:00');
+  const start = new Date(localToIso(date + 'T00:00'));
+  const endDay = new Date(date + 'T00:00:00Z');
+  endDay.setUTCDate(endDay.getUTCDate() + days);
   return {
     from: start.toISOString(),
-    to: new Date(start.getTime() + days * 86400000).toISOString(),
+    to: localToIso(endDay.toISOString().slice(0, 10) + 'T00:00'),
   };
 }
 export function time(value: string) {
   return new Intl.DateTimeFormat(adminLocale() === 'kk' ? 'kk-KZ' : 'ru-KZ', {
-    timeZone: 'Asia/Almaty',
+    timeZone: clinicZone(),
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+export function clinicZone() {
+  return typeof document === 'undefined'
+    ? 'Asia/Almaty'
+    : (document.documentElement.dataset.clinicTimeZone ?? 'Asia/Almaty');
+}
+export function localValue(value: string) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: clinicZone(),
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(value));
+  const part = (name: string) => parts.find((p) => p.type === name)?.value;
+  return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
+}
+export function localToIso(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) throw new Error('Invalid calendar time');
+  const desired = Date.parse(value + ':00Z');
+  let instant = desired;
+  for (let i = 0; i < 4; i++) {
+    const displayed = Date.parse(localValue(new Date(instant).toISOString()) + ':00Z');
+    const delta = desired - displayed;
+    if (delta === 0) return new Date(instant).toISOString();
+    instant += delta;
+  }
+  throw new Error('Calendar time unavailable in clinic time zone');
 }

@@ -52,21 +52,49 @@ export async function verifyPassword(hash: string, password: string) {
     return false;
   }
 }
-export function sealMfa(secret: string, key: Uint8Array, userId: string) {
+export function sealMfa(secret: string, key: Uint8Array, userId: string, keyId?: string) {
+  if (keyId && !/^[a-z0-9-]{1,40}$/.test(keyId)) throw new Error('Invalid key id');
   const nonce = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, nonce);
-  cipher.setAAD(Buffer.from(`clinic:mfa:${userId}:v1`));
+  cipher.setAAD(
+    Buffer.from(keyId ? `clinic:mfa:${userId}:v2:${keyId}` : `clinic:mfa:${userId}:v1`),
+  );
   const body = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
-  return Buffer.concat([Buffer.from([1]), nonce, cipher.getAuthTag(), body]);
+  return Buffer.concat([
+    keyId ? Buffer.concat([Buffer.from([2, keyId.length]), Buffer.from(keyId)]) : Buffer.from([1]),
+    nonce,
+    cipher.getAuthTag(),
+    body,
+  ]);
 }
-export function openMfa(envelope: Uint8Array, key: Uint8Array, userId: string) {
+export function openMfa(
+  envelope: Uint8Array,
+  key: Uint8Array,
+  userId: string,
+  keys: Record<string, Uint8Array> = {},
+) {
   try {
     const buffer = Buffer.from(envelope);
-    if (buffer.length < 30 || buffer[0] !== 1) throw new Error('Invalid envelope');
-    const cipher = createDecipheriv('aes-256-gcm', key, buffer.subarray(1, 13));
-    cipher.setAAD(Buffer.from(`clinic:mfa:${userId}:v1`));
-    cipher.setAuthTag(buffer.subarray(13, 29));
-    return Buffer.concat([cipher.update(buffer.subarray(29)), cipher.final()]).toString('utf8');
+    if (buffer.length < 30 || ![1, 2].includes(buffer[0] ?? 0)) throw new Error();
+    const keyId =
+      buffer[0] === 2 ? buffer.subarray(2, 2 + (buffer[1] ?? 0)).toString('utf8') : null;
+    const offset = keyId ? 2 + Buffer.byteLength(keyId) : 1;
+    if (buffer.length < offset + 29) throw new Error();
+    if (keyId && (!/^[a-z0-9-]{1,40}$/.test(keyId) || !keys[keyId])) throw new Error();
+    if (buffer[0] === 2 && !keyId) throw new Error();
+    const cipher = createDecipheriv(
+      'aes-256-gcm',
+      keyId ? (keys[keyId] ?? key) : key,
+      buffer.subarray(offset, offset + 12),
+      { authTagLength: 16 },
+    );
+    cipher.setAAD(
+      Buffer.from(keyId ? `clinic:mfa:${userId}:v2:${keyId}` : `clinic:mfa:${userId}:v1`),
+    );
+    cipher.setAuthTag(buffer.subarray(offset + 12, offset + 28));
+    return Buffer.concat([cipher.update(buffer.subarray(offset + 28)), cipher.final()]).toString(
+      'utf8',
+    );
   } catch {
     throw new AccessError(503, 'MFA_UNAVAILABLE');
   }

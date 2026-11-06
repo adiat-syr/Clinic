@@ -1,6 +1,25 @@
 import { z } from 'zod/mini';
 const text = z.string(),
   id = z.string();
+const localized = z.object({ ru: text, kk: text });
+export const clinicProfileSchema = z.object({
+  name: localized,
+  address: localized,
+  hours: localized,
+  phone: text,
+  email: text,
+  license: localized,
+  privacy: localized,
+  logoAsset: z.nullable(text),
+  timeZone: text,
+  synthetic: z.boolean(),
+  phoneConsentEnabled: z.boolean(),
+  bookingEnabled: z.boolean(),
+});
+export type ClinicProfile = z.infer<typeof clinicProfileSchema>;
+export async function clinicProfile(signal?: AbortSignal) {
+  return clinicProfileSchema.parse(await request('/clinic', signal ? { signal } : {}));
+}
 export const serviceSchema = z.object({
   id,
   slug: text,

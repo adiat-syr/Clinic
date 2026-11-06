@@ -1,6 +1,16 @@
-# Авторизация и каталог — этап 3
+# Авторизация, каталог и эксплуатация доступа
 
-Разрешены auth/MFA/RBAC, catalogue/staff/audit API, CLI первого ADMIN и восстановления credentials. UI и booking/schedule HTTP API не входят в этап.
+Актуальное дополнение этапа7 ниже. Прежние результаты сохранены как история. UI/booking API уже реализованы; реальные пациенты и production-релиз в этой работе не использовались.
+
+## Этап 7: фактическая эксплуатация
+
+Startup требует PostgreSQL18.6 и две exclusions, запрещает superuser/createdb/createrole/bypassrls/replication/role memberships, владение public tables и CREATE schema/DB. Bootstrap/migrator/runtime/operator/maintenance/backup разделены в infra/ops/database.mjs; семь отрицательных checks выполняются под runtime. API не получает bootstrap credentials. Operator имеет только staff/session/bootstrap/document/audit полномочия; обычный сотрудник не должен иметь CLI/host access.
+
+MFA v2 envelopes несут keyID и subject-bound AAD; legacyv1 читается сохранённым legacy key. AUTH_MFA_KEYS_JSON_FILE + AUTH_MFA_ACTIVE_VERSION выбирают ring. GCM tag строго16byte; missingkey/wrongsubject/tamper отклоняются. Contact/MFA `rotate-keys` идемпотентен; перевыпуск фактора отзывает сессии. Старые ключи нужны старым архивам. Secrets только серверные файлы; клиенту идут public clinic profile/booking flags, без origin/key settings.
+
+Действующий CHALLENGE проверяется под staff/session lock до accountMFAquota; limiter использует ту же transaction без второй pool connection. Protected booking pre-reads также используют authTX. Проверены pool_size1 регрессии, MFA replay/roles/session/CSRF и настоящий HTTPS __Host Secure HttpOnly cookie через Caddy. Точный trusted proxy IP; backendport закрыт. Linux privatePTY test заполняет credentials CLI, проверяет отсутствие эха и сохранение роли; физический Authenticator/процедуры клиники — внешняя приёмка.
+
+После restore sessions удаляются и staff credentials карантинируются: старый backup не восстанавливает уволенный доступ. ADMIN возвращается private recover-admin после проверки владельцем, остальные — credentials. Команды/границы cutover — DEPLOYMENT.md/OPERATIONS.md, внешние условия — STAGE-7-BLOCKERS.md, правовые — только LEGAL-REVIEW-REQUIRED.md.
 
 ## Принятые решения
 

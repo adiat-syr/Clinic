@@ -160,12 +160,13 @@ export class AuthService {
         const session = await tx.staffSession.findUniqueOrThrow({ where: { id: sessionId } });
         if (session.authStage !== 'CHALLENGE') throw new AccessError(401, 'INVALID_MFA');
         // Only a live password-verified challenge may spend the subject's MFA quota.
-        // Separate committed limiter transaction keeps failed attempts after rollback.
-        await this.limiter.require('mfa-account', actor.id, 5, 5 * MINUTE);
+        // Failed-code outcomes return false and commit this counter with their audit.
+        // Reuse the held connection: a nested pool checkout can deadlock a saturated pool.
+        await this.limiter.require('mfa-account', actor.id, 5, 5 * MINUTE, tx);
         const user = await tx.staffUser.findUniqueOrThrow({ where: { id: actor.id } });
         if (!user.mfaSecretCiphertext) throw new AccessError(401, 'INVALID_MFA');
         const counter = totpCounter(
-          openMfa(user.mfaSecretCiphertext, this.config.mfaKey, user.id),
+          openMfa(user.mfaSecretCiphertext, this.config.mfaKey, user.id, this.config.mfaKeys),
           command.code,
           this.now(),
         );
@@ -248,7 +249,12 @@ export class AuthService {
           role: 'ADMIN',
           isActive: true,
           mfaEnabled: true,
-          mfaSecretCiphertext: sealMfa(command.mfaSecret, this.config.mfaKey, id),
+          mfaSecretCiphertext: sealMfa(
+            command.mfaSecret,
+            this.config.mfaWriteKey?.key ?? this.config.mfaKey,
+            id,
+            this.config.mfaWriteKey?.id,
+          ),
           mfaLastUsedCounter: counter,
           passwordChangedAt: this.now(),
         },
@@ -309,7 +315,12 @@ export class AuthService {
           passwordHash,
           isActive: true,
           mfaEnabled: true,
-          mfaSecretCiphertext: sealMfa(command.mfaSecret, this.config.mfaKey, target.id),
+          mfaSecretCiphertext: sealMfa(
+            command.mfaSecret,
+            this.config.mfaWriteKey?.key ?? this.config.mfaKey,
+            target.id,
+            this.config.mfaWriteKey?.id,
+          ),
           mfaLastUsedCounter: counter,
           passwordChangedAt: this.now(),
         },

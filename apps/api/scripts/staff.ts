@@ -5,6 +5,7 @@ import { AuthService } from '../src/modules/security/service.js';
 import { AccessError } from '../src/modules/security/errors.js';
 import { createPrisma } from '../src/infrastructure/prisma.js';
 import { credentialsSchema } from '../src/modules/security/input.js';
+import { loadSecretFiles } from '../src/config/secrets.js';
 import {
   readValidatedField,
   readExistingStaffEmail,
@@ -57,6 +58,7 @@ if (
 } else {
   let client: ReturnType<typeof createPrisma> | undefined;
   try {
+    loadSecretFiles();
     const core = parseEnvironment(process.env);
     const config = parseSecurityEnvironment(process.env);
     const operatorClient = createPrisma(core.DATABASE_URL);

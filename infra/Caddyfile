@@ -1,0 +1,11 @@
+{
+  email {$ACME_EMAIL}
+  admin off
+}
+import /etc/caddy/Caddyfile.site
+{$SITE_HOST} {
+  import site
+}
+:8081 {
+  respond /healthz "ok" 200
+}

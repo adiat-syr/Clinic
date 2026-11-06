@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { doctors, services, type Service, type Doctor } from '../api/clinic';
+import { doctors, services, clinicProfile, type Service, type Doctor } from '../api/clinic';
 import { Booking } from '../features/Booking';
 import { PatientConsent } from '../features/PatientConsent';
 import { copy, type Locale } from './i18n';
@@ -19,6 +19,11 @@ export function App({
         : (parts[1] ?? 'home'),
     slug = parts[2];
   const [search, setSearch] = useState('');
+  const info = useQuery({
+    queryKey: ['clinic'],
+    queryFn: ({ signal }) => clinicProfile(signal),
+    retry: false,
+  });
   const catalog = useQuery({
       queryKey: ['services'],
       queryFn: ({ signal }) => services(signal),
@@ -51,6 +56,14 @@ export function App({
               : page === 'privacy'
                 ? t.privacy
                 : t.notfound;
+  if (!info.data)
+    return (
+      <main className="container">
+        <p role={info.isError ? 'alert' : 'status'}>{info.isError ? t.error : t.loading}</p>
+        {info.isError && <button onClick={() => void info.refetch()}>{t.retry}</button>}
+      </main>
+    );
+  const clinic = info.data;
   const price = (s: Service) => `${Number(s.priceKzt).toLocaleString('ru-KZ')} ₸`;
   const serviceCard = (s: Service) => (
     <article className="panel service-card" key={s.id}>
@@ -121,7 +134,7 @@ export function App({
   return (
     <>
       <a className="skip" href="#main">
-        {t.booking}
+        {t.skip}
       </a>
       <header className="site-header">
         <a href={href('home')} className="brand">
@@ -129,7 +142,8 @@ export function App({
             ✚
           </span>
           <span>
-            ALATAU <small>CLINIC</small>
+            {clinic.logoAsset && <img src={clinic.logoAsset} alt="" width="36" height="36" />}
+            {clinic.name[locale]}
           </span>
         </a>
         <nav aria-label={t.home}>
@@ -152,12 +166,12 @@ export function App({
           ))}
         </div>
       </header>
-      <div className="environment">{t.synthetic}</div>
+      {clinic.synthetic && <div className="environment">{t.synthetic}</div>}
       <main id="main" className="container">
         {page === 'home' && (
           <section className="hero">
             <div>
-              <span className="eyebrow">ALATAU CLINIC</span>
+              <span className="eyebrow">{clinic.name[locale]}</span>
               <h1>{t.hero}</h1>
               <p className="lead">{t.intro}</p>
               <a className="button" href={href('booking')}>
@@ -169,11 +183,7 @@ export function App({
             </div>
             <div className="hero-art" aria-hidden="true">
               <div className="cross">✚</div>
-              <div className="art-caption">
-                ALATAU
-                <br />
-                <span>CLINIC</span>
-              </div>
+              <div className="art-caption">{clinic.name[locale]}</div>
             </div>
           </section>
         )}
@@ -278,19 +288,48 @@ export function App({
             )}
           </>
         )}
-        {!busy && !error && page === 'booking' && (
-          <Booking services={catalog.data ?? []} doctors={team.data ?? []} locale={locale} />
+        {!busy && !error && page === 'booking' && !clinic.bookingEnabled && (
+          <section className="panel">
+            <h1>{t.booking}</h1>
+            <p>
+              {locale === 'ru'
+                ? 'Онлайн-запись временно недоступна. Свяжитесь с регистратурой.'
+                : 'Онлайн жазылу уақытша қолжетімсіз. Тіркеу бөліміне хабарласыңыз.'}
+            </p>
+            <a className="button" href={href('contacts')}>
+              {t.contacts}
+            </a>
+          </section>
+        )}
+        {!busy && !error && page === 'booking' && clinic.bookingEnabled && (
+          <Booking
+            timeZone={clinic.timeZone}
+            services={catalog.data ?? []}
+            doctors={team.data ?? []}
+            locale={locale}
+          />
         )}
         {page === 'contacts' && (
           <div className="two-columns">
             <section className="panel">
-              <h2>Alatau Clinic</h2>
-              <p>{t.synthetic}</p>
+              <h2>{clinic.name[locale]}</h2>
+              {clinic.synthetic && <p>{t.synthetic}</p>}
+              <p>{clinic.address[locale]}</p>
+              <p>{clinic.hours[locale]}</p>
+              <p>{clinic.license[locale]}</p>
               <p>
-                {locale === 'ru'
-                  ? 'Реквизиты, адрес и телефон реальной клиники ещё не утверждены. Эта версия предназначена только для проверки записи с вымышленными контактами.'
-                  : 'Нақты клиниканың мекенжайы мен телефоны әлі бекітілген жоқ. Бұл нұсқа тек ойдан шығарылған деректермен тексеруге арналған.'}
+                <a href={'tel:' + clinic.phone}>{clinic.phone}</a>
               </p>
+              <p>
+                <a href={'mailto:' + clinic.email}>{clinic.email}</a>
+              </p>
+              {clinic.synthetic && (
+                <p>
+                  {locale === 'ru'
+                    ? 'Реквизиты, адрес и телефон реальной клиники ещё не утверждены. Эта версия предназначена только для проверки записи с вымышленными контактами.'
+                    : 'Нақты клиниканың мекенжайы мен телефоны әлі бекітілген жоқ. Бұл нұсқа тек ойдан шығарылған деректермен тексеруге арналған.'}
+                </p>
+              )}
               <a className="button" href={href('booking')}>
                 {t.booking}
               </a>
@@ -309,17 +348,19 @@ export function App({
         {page === 'privacy' && (
           <section className="panel prose">
             <h2>{t.consent}</h2>
-            <p>{t.synthetic}</p>
+            {clinic.synthetic && <p>{t.synthetic}</p>}
             <p>{t.safe}</p>
-            <p>
-              {locale === 'ru'
-                ? 'Для заявки запрашиваются только имя, телефон, услуга, врач, время и согласие. Контакты хранятся в зашифрованном виде. Актуальное согласие доступно в форме до отправки. Сроки хранения и регламент обращений реальной клиники должны быть утверждены до запуска.'
-                : 'Өтінім үшін тек аты, телефон, қызмет, дәрігер, уақыт және келісім сұралады. Байланыс деректері шифрланған түрде сақталады. Өзекті келісім жіберу алдында көрсетіледі. Сақтау мерзімдері іске қосылғанға дейін бекітілуі тиіс.'}
-            </p>
+            <p className="consent-text">{clinic.privacy[locale]}</p>
             <a href={href('booking')}>{t.booking}</a>
           </section>
         )}
-        {page === 'phone-consent' && <PatientConsent locale={locale} />}
+        {page === 'phone-consent' && (
+          <PatientConsent
+            locale={locale}
+            synthetic={clinic.synthetic}
+            available={clinic.bookingEnabled && clinic.phoneConsentEnabled}
+          />
+        )}
         {![
           'home',
           'services',
@@ -336,9 +377,9 @@ export function App({
       </main>
       <footer className="footer">
         <a className="brand" href={href('home')}>
-          ALATAU CLINIC
+          {clinic.name[locale]}
         </a>
-        <p>{t.synthetic}</p>
+        {clinic.synthetic && <p>{t.synthetic}</p>}
         <a href={href('privacy')}>{t.privacy}</a>
         <a href={href('phone-consent')}>
           {locale === 'ru'

@@ -22,12 +22,26 @@ export function readCookie(request: Request, name: string) {
   return /^[A-Za-z0-9_-]{43}$/.test(value) ? value : null;
 }
 
-export function securityRouter(auth: AuthService, booking?: BookingHttpService) {
+export function securityRouter(
+  auth: AuthService,
+  booking?: BookingHttpService,
+  onCatalogueChange: () => void = () => {},
+) {
   const router = Router();
   const config = auth.config;
   const catalog = new CatalogService(auth.client);
   const staff = new StaffService();
   const audit = new AuditService();
+  router.use('/admin', (req, res, next) => {
+    if (
+      ['POST', 'PATCH', 'PUT'].includes(req.method) &&
+      /^\/(doctors|services)(?:\/|$)/.test(req.path)
+    )
+      res.once('finish', () => {
+        if (res.statusCode < 400) onCatalogueChange();
+      });
+    next();
+  });
   const requestId = (response: Response) =>
     String(response.getHeader('x-request-id') ?? randomUUID());
   const session = (request: Request) => readCookie(request, config.sessionCookie);

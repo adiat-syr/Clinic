@@ -12,6 +12,9 @@ import {
   time,
   message,
   statuses,
+  clinicZone,
+  localValue,
+  localToIso,
 } from './api';
 import { LoadState, Confirm, Pager } from './ui';
 export function Schedule() {
@@ -62,8 +65,7 @@ export function Schedule() {
         : Promise.resolve(null),
     ['schedule-free', date, doctor, service],
   );
-  const local = (v: string) =>
-    new Date(new Date(v).getTime() + 5 * 3600000).toISOString().slice(0, 16);
+  const local = localValue;
   function reload() {
     windows.refresh();
     bookings.refresh();
@@ -72,7 +74,10 @@ export function Schedule() {
   return (
     <>
       <h1>{t('Календарь врачей')}</h1>
-      <p>{t('Время клиники: Asia/Almaty. Для свободных интервалов выберите врача и услугу.')}</p>
+      <p>
+        {t('Время клиники:')} {clinicZone()}.{' '}
+        {t('Для свободных интервалов выберите врача и услугу.')}
+      </p>
       <section className="panel admin-filters">
         <label>
           {t('Дата календаря')}
@@ -217,8 +222,8 @@ export function Schedule() {
             edit ? 'PATCH' : 'POST',
             {
               doctorId: edit?.doctorId ?? doctor,
-              startsAt: new Date(start + ':00+05:00').toISOString(),
-              endsAt: new Date(end + ':00+05:00').toISOString(),
+              startsAt: localToIso(start),
+              endsAt: localToIso(end),
             },
           )
             .then(() => {

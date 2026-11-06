@@ -119,17 +119,40 @@ function windowDto(row: {
   };
 }
 export class BookingHttpService {
+  onlineBookingAllowed = true;
+  withdrawalJournal?: WithdrawalJournal;
+  async withWithdrawalLock<T>(work: () => Promise<T>): Promise<T> {
+    if (!this.withdrawalJournal) return work();
+    let entered = false;
+    try {
+      return await this.withdrawalJournal.withLock(() => {
+        entered = true;
+        return work();
+      });
+    } catch (error) {
+      if (entered) throw error;
+      throw new AccessError(503, 'PRIVACY_JOURNAL_UNAVAILABLE');
+    }
+  }
+  phoneConsentAllowed = true;
   readonly core: BookingService;
   readonly privacy: ContactPrivacy;
   constructor(
     readonly client: PrismaClient,
     readonly config: PrivacyConfig,
     readonly now: () => Date = () => new Date(),
+    readonly approvedConsentHash?: string,
   ) {
     this.privacy = new ContactPrivacy(config);
-    this.core = new BookingService(client, { idempotencySecret: config.hmacKey, now });
+    this.core = new BookingService(client, {
+      idempotencySecret: config.hmacKey,
+      now,
+      ...(approvedConsentHash ? { approvedConsentHash } : {}),
+    });
   }
   async issueConsentCode(input: unknown) {
+    if (!this.onlineBookingAllowed) throw new AccessError(503, 'BOOKING_NOT_ENABLED');
+    if (!this.phoneConsentAllowed) throw new AccessError(403, 'PHONE_CONSENT_NOT_APPROVED');
     const command = validated(patientConsentSchema, input);
     return withTransaction(this.client, async (tx) => {
       const now = this.now();
@@ -137,7 +160,12 @@ export class BookingHttpService {
       const document = await tx.consentDocument.findUnique({
         where: { id: command.consent.documentId },
       });
-      if (!document || document.retiredAt || document.publishedAt > now)
+      if (
+        !document ||
+        document.retiredAt ||
+        document.publishedAt > now ||
+        (this.approvedConsentHash && document.contentSha256 !== this.approvedConsentHash)
+      )
         throw new AccessError(409, 'CONSENT_CHANGED');
       const code = randomBytes(16).toString('hex'),
         expiresAt = new Date(now.getTime() + 5 * 60000);
@@ -161,6 +189,8 @@ export class BookingHttpService {
     actor: string,
     requestId: string,
   ) {
+    if (!this.phoneConsentAllowed) throw new AccessError(403, 'PHONE_CONSENT_NOT_APPROVED');
+    if (!this.onlineBookingAllowed) throw new AccessError(503, 'BOOKING_NOT_ENABLED');
     const command = validated(staffBookingSchema, input),
       idempotencyKey = validated(z.string().regex(/^[a-fA-F0-9]{32,128}$/), key),
       hash = consentCodeHash(command.consentCode),
@@ -203,6 +233,7 @@ export class BookingHttpService {
     };
   }
   async create(input: unknown, key: unknown) {
+    if (!this.onlineBookingAllowed) throw new AccessError(503, 'BOOKING_NOT_ENABLED');
     const command = validated(publicBookingSchema, input),
       idempotencyKey = validated(z.string().regex(/^[a-fA-F0-9]{32,128}$/), key);
     const row = await this.core.create({
@@ -361,9 +392,24 @@ export class BookingHttpService {
       throw new AccessError(409, 'VERSION_CONFLICT');
     const consent = await tx.appointmentConsent.findUniqueOrThrow({ where: { appointmentId: id } });
     if (consent.withdrawnAt) throw new AccessError(409, 'CONSENT_ALREADY_WITHDRAWN');
+    const withdrawnAt = this.now();
+    if (this.withdrawalJournal) {
+      try {
+        await this.withdrawalJournal.record({
+          appointmentId: id,
+          documentId: consent.documentId,
+          operationId: randomUUID(),
+          actorId: actor,
+          requestId,
+          withdrawnAt: withdrawnAt.toISOString(),
+        });
+      } catch {
+        throw new AccessError(503, 'PRIVACY_JOURNAL_UNAVAILABLE');
+      }
+    }
     await tx.appointmentConsent.update({
       where: { appointmentId: id },
-      data: { withdrawnAt: this.now() },
+      data: { withdrawnAt },
     });
     await tx.appointment.update({ where: { id }, data: { version: { increment: 1 } } });
     await writeAudit(tx, 'CONSENT_WITHDRAWAL_RECORDED', 'appointment', id, requestId, actor);
@@ -375,6 +421,9 @@ export class BookingHttpService {
       where: { retiredAt: null, publishedAt: { lte: this.now() } },
     });
     if (!row) throw new AccessError(404, 'NOT_FOUND');
+    if (this.approvedConsentHash && row.contentSha256 !== this.approvedConsentHash)
+      throw new AccessError(409, 'CONSENT_CHANGED');
+
     return {
       id: row.id,
       version: row.version,
@@ -402,4 +451,15 @@ export class BookingHttpService {
       return { id: row.id, version: row.version };
     });
   }
+}
+export interface WithdrawalJournal {
+  withLock<T>(work: () => Promise<T>): Promise<T>;
+  record(input: {
+    appointmentId: string;
+    documentId: string;
+    operationId: string;
+    withdrawnAt: string;
+    actorId: string;
+    requestId: string;
+  }): Promise<void>;
 }

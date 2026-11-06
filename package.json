@@ -42,7 +42,12 @@
     "consent:publish": "npm run consent:publish --workspace @clinic/api --",
     "test:web": "npm run build && node --env-file-if-exists=.env scripts/test-web.mjs",
     "staff:recover-admin": "npm run staff:recover-admin --workspace @clinic/api",
-    "staff:email": "npm run staff:email --workspace @clinic/api"
+    "staff:email": "npm run staff:email --workspace @clinic/api",
+    "test:ops:unit": "node --test infra/tests/crypto-ledger.test.mjs infra/tests/deployment-policy.test.mjs",
+    "test:ops": "node infra/test-ops.mjs stage7",
+    "test:https": "node infra/test-https.mjs stage7",
+    "deploy:prepare": "node infra/prepare.mjs",
+    "deploy:local": "node infra/deploy.mjs"
   },
   "overrides": {
     "minimatch": "11.0.1"

@@ -105,14 +105,20 @@ export function registerBookingRoutes(
       ),
     ),
   );
-  router.post('/admin/appointments/:id/consent-withdrawal', async (req, res) =>
+  router.post('/admin/appointments/:id/consent-withdrawal', async (req, res) => {
+    csrf(req);
+    empty(req.query);
+    const actor = await auth.me(session(req), requestId(res));
+    if (actor.role !== 'ADMIN') throw new AccessError(403, 'FORBIDDEN');
     res.json(
-      await work(
-        req,
-        res,
-        (tx, actor) => booking.withdraw(tx, req.params.id, req.body, actor, requestId(res)),
-        true,
+      await booking.withWithdrawalLock(() =>
+        work(
+          req,
+          res,
+          (tx, actor) => booking.withdraw(tx, req.params.id, req.body, actor, requestId(res)),
+          true,
+        ),
       ),
-    ),
-  );
+    );
+  });
 }

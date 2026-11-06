@@ -506,8 +506,17 @@ summary {
     font-size: 22px;
   }
   .footer {
-    display: block;
+    display: grid;
+    gap: 12px;
     padding: 30px 20px 110px;
+  }
+  .footer > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .footer > p {
+    margin: 0;
   }
   .mobile-nav {
     position: fixed;

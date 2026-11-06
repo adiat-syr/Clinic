@@ -3,10 +3,120 @@
   "info": {
     "title": "Clinic API — stage 4",
     "version": "0.4.0",
-    "description": "Synthetic local implementation with booking/schedule API. No admin UI. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations."
+    "description": "Clinic appointment API and RU/KK staff workspace. Deployment can run synthetic mode or explicitly activated clinic mode. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
+    "/clinic": {
+      "get": {
+        "operationId": "clinicProfile",
+        "summary": "Public clinic profile; no server settings or secrets",
+        "description": "Unknown query/body fields are rejected. All responses use no-store.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Clinic" } }
+            }
+          },
+          "400": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "409": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "413": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "503": {
+            "description": "Safe error: code, message, requestId; no stack/SQL/input values",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string", "const": "no-store" } },
+              "X-Request-Id": { "schema": { "type": "string", "format": "uuid" } }
+            },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "liveness",
@@ -4412,9 +4522,90 @@
         "properties": {
           "status": { "type": "string", "enum": ["ok", "ready"] },
           "service": { "type": "string", "const": "clinic-api" },
-          "dataMode": { "type": "string", "const": "synthetic" }
+          "dataMode": { "type": "string", "enum": ["synthetic", "clinic"] }
         },
         "required": ["status", "service", "dataMode"],
+        "additionalProperties": false
+      },
+      "Clinic": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "object",
+            "properties": {
+              "ru": { "type": "string", "minLength": 2, "maxLength": 2000 },
+              "kk": { "type": "string", "minLength": 2, "maxLength": 2000 }
+            },
+            "required": ["ru", "kk"],
+            "additionalProperties": false
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "ru": { "type": "string", "minLength": 2, "maxLength": 2000 },
+              "kk": { "type": "string", "minLength": 2, "maxLength": 2000 }
+            },
+            "required": ["ru", "kk"],
+            "additionalProperties": false
+          },
+          "hours": {
+            "type": "object",
+            "properties": {
+              "ru": { "type": "string", "minLength": 2, "maxLength": 2000 },
+              "kk": { "type": "string", "minLength": 2, "maxLength": 2000 }
+            },
+            "required": ["ru", "kk"],
+            "additionalProperties": false
+          },
+          "phone": { "type": "string", "pattern": "^\\+7\\d{10}$" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "license": {
+            "type": "object",
+            "properties": {
+              "ru": { "type": "string", "minLength": 2, "maxLength": 2000 },
+              "kk": { "type": "string", "minLength": 2, "maxLength": 2000 }
+            },
+            "required": ["ru", "kk"],
+            "additionalProperties": false
+          },
+          "privacy": {
+            "type": "object",
+            "properties": {
+              "ru": { "type": "string", "minLength": 2, "maxLength": 2000 },
+              "kk": { "type": "string", "minLength": 2, "maxLength": 2000 }
+            },
+            "required": ["ru", "kk"],
+            "additionalProperties": false
+          },
+          "logoAsset": {
+            "anyOf": [
+              { "type": "string", "pattern": "^\\/assets\\/clinic\\/[a-z0-9-]+\\.(svg|png|webp)$" },
+              { "type": "null" }
+            ]
+          },
+          "timeZone": { "type": "string" },
+          "synthetic": { "type": "boolean" },
+          "phoneConsentEnabled": { "type": "boolean" },
+          "bookingEnabled": { "type": "boolean" }
+        },
+        "required": [
+          "name",
+          "address",
+          "hours",
+          "phone",
+          "email",
+          "license",
+          "privacy",
+          "logoAsset",
+          "timeZone",
+          "synthetic",
+          "phoneConsentEnabled",
+          "bookingEnabled"
+        ],
         "additionalProperties": false
       },
       "Login": {
@@ -4909,7 +5100,8 @@
                     "priceKzt",
                     "durationMinutes",
                     "services",
-                    "role"
+                    "role",
+                    "email"
                   ]
                 }
               }

@@ -1,3 +1,4 @@
+import type { ClinicProfile } from '../api/clinic';
 import { translate as t, adminHref, adminLocale } from './i18n';
 import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { Catalog } from './Catalog';
 import { Staff } from './Staff';
 import { Audit } from './Audit';
 import './admin.css';
-function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
+function Login({ onLogin, clinic }: { onLogin: (me: Identity) => void; clinic: ClinicProfile }) {
   const [challenge, setChallenge] = useState(false),
     [email, setEmail] = useState(''),
     [password, setPassword] = useState(''),
@@ -40,12 +41,15 @@ function Login({ onLogin }: { onLogin: (me: Identity) => void }) {
   return (
     <main className="admin-login">
       <a className="brand" href={'/' + adminLocale()}>
-        ✚ ALATAU CLINIC
+        ✚ {clinic.name[adminLocale()]}
       </a>
       <form className="panel" onSubmit={submit}>
         <span className="badge">{t('Рабочее пространство')}</span>
         <h1>{challenge ? t('Подтверждение MFA') : t('Вход сотрудника')}</h1>
-        <p>{t('Только уполномоченные сотрудники. Синтетическая среда.')}</p>
+        <p>
+          {t('Только уполномоченные сотрудники.')}
+          {clinic.synthetic && ' ' + t('Синтетическая среда.')}
+        </p>
         {challenge ? (
           <>
             <label>
@@ -171,7 +175,7 @@ function Profile({ expire }: { expire: () => void }) {
     </form>
   );
 }
-export default function Admin() {
+export default function Admin({ clinic }: { clinic: ClinicProfile }) {
   const authRevision = useRef(0);
   const [client] = useState(
       () =>
@@ -266,6 +270,7 @@ export default function Admin() {
           </p>
         )}
         <Login
+          clinic={clinic}
           onLogin={(identity) => {
             authRevision.current++;
             client.clear();
@@ -301,9 +306,12 @@ export default function Admin() {
       <div className="admin-shell">
         <header className="admin-header">
           <a className="brand" href={adminHref('/admin')}>
-            ✚ Alatau Clinic <small>{t('Регистратура')}</small>
+            ✚ {clinic.name[adminLocale()]} <small>{t('Регистратура')}</small>
           </a>
-          <span className="badge">{t('Синтетическая среда · Asia/Almaty')}</span>
+          <span className="badge">
+            {clinic.synthetic && t('Синтетическая среда.') + ' · '}
+            {clinic.timeZone}
+          </span>
           <span>
             {me.email} · {me.role}
           </span>
@@ -350,7 +358,10 @@ export default function Admin() {
           ) : !allowed.includes(section) ? (
             <h1>{t('Страница не найдена')}</h1>
           ) : section === 'appointments' ? (
-            <Appointments admin={admin} />
+            <Appointments
+              admin={admin}
+              phoneConsentEnabled={clinic.bookingEnabled && clinic.phoneConsentEnabled}
+            />
           ) : section === 'schedule' ? (
             <Schedule />
           ) : section === 'profile' ? (

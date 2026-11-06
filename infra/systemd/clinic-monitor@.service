@@ -1,0 +1,16 @@
+[Unit]
+Description=Clinic %i independent operational check
+After=docker.service network-online.target
+Requires=docker.service
+# Configure a local OnFailure handler and test delivery before real traffic.
+
+[Service]
+Type=oneshot
+User=clinic
+WorkingDirectory=/opt/clinic/app
+Environment=CLINIC_DEPLOY_ROOT=/srv/clinic
+ExecStart=/usr/bin/node infra/deploy.mjs %i monitor production
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+UMask=0077

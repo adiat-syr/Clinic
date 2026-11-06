@@ -15,6 +15,8 @@ export default defineConfig([
     'design-reference/**',
     'apps/api/src/generated/**',
     '.tmp/**',
+    '.deploy/**',
+    'static_analysis_semgrep_*/**',
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,

@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 export const healthResponseSchema = z.strictObject({
   status: z.enum(['ok', 'ready']),
   service: z.literal('clinic-api'),
-  dataMode: z.literal('synthetic'),
+  dataMode: z.enum(['synthetic', 'clinic']),
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;

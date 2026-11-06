@@ -4,7 +4,15 @@ import { z } from 'zod/mini';
 import { request, consentSchema, validateContacts, ApiError } from '../api/clinic';
 import { copy, type Locale } from '../app/i18n';
 
-export function PatientConsent({ locale }: { locale: Locale }) {
+export function PatientConsent({
+  locale,
+  synthetic = true,
+  available = true,
+}: {
+  locale: Locale;
+  synthetic?: boolean;
+  available?: boolean;
+}) {
   const t = copy[locale],
     ru = locale === 'ru';
   const [name, setName] = useState(''),
@@ -43,14 +51,22 @@ export function PatientConsent({ locale }: { locale: Locale }) {
     );
     return () => clearTimeout(timer);
   }, [receipt, ru]);
+  if (!available)
+    return (
+      <section className="panel">
+        <h1>{ru ? 'Запись с сотрудником недоступна' : 'Қызметкер арқылы жазылу қолжетімсіз'}</h1>
+        <a href={'/' + locale + '/booking'}>{t.booking}</a>
+      </section>
+    );
   return (
     <section className="panel booking-form">
       <h1>{ru ? 'Согласие для записи с сотрудником' : 'Қызметкер арқылы жазылуға келісім'}</h1>
       <p>
         {ru
-          ? 'Дополнительный способ для телефонного обращения. Основной способ — самостоятельная онлайн-запись. Только синтетические данные; юридическая применимость процедуры не проверена.'
-          : 'Телефон арқылы жүгінуге арналған қосымша тәсіл. Негізгі тәсіл — өз бетіңізше онлайн жазылу. Тек синтетикалық деректер; рәсімнің заңдық жарамдылығы тексерілмеген.'}
+          ? 'Дополнительный способ для телефонного обращения. Основной способ — самостоятельная онлайн-запись.'
+          : 'Телефон арқылы жүгінуге арналған қосымша тәсіл. Негізгі тәсіл — өз бетіңізше онлайн жазылу.'}
       </p>
+      {synthetic && <p>{t.synthetic}</p>}
       <a href={'/' + locale + '/booking'}>{t.booking}</a>
       <p>
         {ru

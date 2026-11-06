@@ -17,11 +17,34 @@ export interface SecurityConfig {
   origin: string;
   secureCookies: boolean;
   mfaKey: Uint8Array;
+  mfaWriteKey?: { id: string; key: Uint8Array };
+  mfaKeys?: Record<string, Uint8Array>;
   csrfKey: Uint8Array;
   sessionCookie: string;
   csrfCookie: string;
 }
 export function parseSecurityEnvironment(env: NodeJS.ProcessEnv): SecurityConfig {
+  let rotation: Pick<SecurityConfig, 'mfaWriteKey' | 'mfaKeys'> = {};
+  if (env.AUTH_MFA_KEYS_JSON || env.AUTH_MFA_ACTIVE_VERSION) {
+    try {
+      const values = z
+        .record(z.string().regex(/^[a-z0-9-]{1,40}$/), z.string().regex(/^[a-f0-9]{64}$/))
+        .parse(JSON.parse(env.AUTH_MFA_KEYS_JSON ?? ''));
+      const id = z
+        .string()
+        .regex(/^[a-z0-9-]{1,40}$/)
+        .parse(env.AUTH_MFA_ACTIVE_VERSION);
+      if (!values[id] || Object.values(values).includes(env.AUTH_CSRF_KEY ?? '')) throw new Error();
+      rotation = {
+        mfaWriteKey: { id, key: Buffer.from(values[id], 'hex') },
+        mfaKeys: Object.fromEntries(
+          Object.entries(values).map(([v, k]) => [v, Buffer.from(k, 'hex')]),
+        ),
+      };
+    } catch {
+      throw new ConfigurationError(['AUTH_MFA_KEYS_JSON', 'AUTH_MFA_ACTIVE_VERSION']);
+    }
+  }
   const result = schema.safeParse(env);
   if (!result.success)
     throw new ConfigurationError([
@@ -40,6 +63,7 @@ export function parseSecurityEnvironment(env: NodeJS.ProcessEnv): SecurityConfig
     throw new ConfigurationError(['AUTH_MFA_KEY', 'AUTH_CSRF_KEY']);
   const secureCookies = url.protocol === 'https:';
   return {
+    ...rotation,
     origin: url.origin,
     secureCookies,
     mfaKey: Buffer.from(result.data.AUTH_MFA_KEY, 'hex'),

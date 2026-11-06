@@ -1,16 +1,36 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { render } from '../dist-server/entry-server.js';
 const root = new URL('../../../', import.meta.url),
   env = new URL('.env', root);
 if (existsSync(env)) loadEnvFile(env);
-let data = { services: [], doctors: [] };
+const { loadClinicProfile, phoneConsentEnabled, verifyClinicData, publicBookingEnabled } =
+  await import('../../api/dist/config/clinic.js');
+const profile = loadClinicProfile({
+  ...process.env,
+  CLINIC_TIME_ZONE: process.env.CLINIC_TIME_ZONE ?? 'Asia/Almaty',
+});
+let data = {
+  services: [],
+  doctors: [],
+  clinic: {
+    ...profile,
+    phoneConsentEnabled: phoneConsentEnabled(process.env),
+    bookingEnabled: publicBookingEnabled(process.env),
+  },
+};
+async function publish(file, body) {
+  const temporary = new URL(file.href + '.next');
+  await writeFile(temporary, body);
+  await rename(temporary, file);
+}
 try {
   const { createPrisma } = await import('../../api/dist/infrastructure/prisma.js'),
     { CatalogService } = await import('../../api/dist/modules/catalog/service.js');
   const client = createPrisma(process.env.DATABASE_URL);
   try {
+    await verifyClinicData(client, process.env);
     const catalog = new CatalogService(client);
     async function all(fn) {
       let page = 1,
@@ -24,6 +44,7 @@ try {
       throw new Error('Catalog too large');
     }
     data = {
+      clinic: data.clinic,
       services: await all((q) => catalog.services(q)),
       doctors: await all((q) => catalog.doctors(q)),
     };
@@ -42,7 +63,7 @@ const template = await readFile(
     'utf8',
   ),
   paths = [];
-await writeFile(templateFile, template);
+await publish(templateFile, template);
 for (const locale of ['ru', 'kk'])
   for (const path of [
     '',
@@ -51,6 +72,7 @@ for (const locale of ['ru', 'kk'])
     '/booking',
     '/contacts',
     '/privacy',
+    '/phone-consent',
     ...data.services.map((s) => '/services/' + s.slug),
     ...data.doctors.map((d) => '/doctors/' + d.slug),
   ]) {
@@ -81,7 +103,7 @@ for (const locale of ['ru', 'kk'])
       [...data.services, ...data.doctors].find((x) => path.endsWith('/' + x.slug))?.[
         locale === 'ru' ? 'nameRu' : 'nameKk'
       ] ??
-      'Alatau';
+      profile.name[locale];
     const route = '/' + locale + path;
     paths.push(route);
     let html = template
@@ -92,7 +114,7 @@ for (const locale of ['ru', 'kk'])
       )
       .replace(
         '<title>Alatau Clinic — разработка</title>',
-        `<title>Alatau Clinic · ${escape(label)}</title>`,
+        `<title>${escape(profile.name[locale])} · ${escape(label)}</title>`,
       );
     const origin = process.env.PUBLIC_SITE_ORIGIN;
     if (origin) {
@@ -113,18 +135,18 @@ for (const locale of ['ru', 'kk'])
     }
     const dir = new URL('../dist' + route + '/', import.meta.url);
     await mkdir(dir, { recursive: true });
-    await writeFile(new URL('index.html', dir), html);
+    await publish(new URL('index.html', dir), html);
   }
-await writeFile(
+await publish(
   new URL('../dist/404.html', import.meta.url),
   template.replace('<div id="root"></div>', `<div id="root">${render('/ru/404', data)}</div>`),
 );
-await writeFile(
+await publish(
   new URL('../dist/index.html', import.meta.url),
   await readFile(new URL('../dist/ru/index.html', import.meta.url)),
 );
 if (process.env.PUBLIC_SITE_ORIGIN)
-  await writeFile(
+  await publish(
     new URL('../dist/sitemap.xml', import.meta.url),
     '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
       paths

@@ -5,6 +5,51 @@ import { apiErrorSchema, healthResponseSchema } from '@clinic/contracts';
 import { createApp } from '../src/app.js';
 
 describe('foundation HTTP boundary', () => {
+  it('bounds expensive public renders and leaves readiness available', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let entered = 0;
+    const app = createApp({
+      database: { ping: async () => {} },
+      site: {
+        render: async () => {
+          entered++;
+          await gate;
+          return { status: 200, html: '<p>Synthetic public page</p>' };
+        },
+      },
+    });
+    const isolated = app.listen(0, '127.0.0.1');
+    await once(isolated, 'listening');
+    const address = isolated.address();
+    if (!address || typeof address === 'string') throw new Error('Test address unavailable');
+    const origin = `http://127.0.0.1:${address.port}`;
+    const requests = Array.from({ length: 4 }, () => fetch(origin + '/ru'));
+    try {
+      for (let i = 0; i < 100 && entered < 4; i++)
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(entered).toBe(4);
+      expect((await fetch(origin + '/ru')).status).toBe(503);
+      expect((await fetch(origin + '/api/v1/health/ready')).status).toBe(200);
+      release();
+      expect((await Promise.all(requests)).map((r) => r.status)).toEqual([200, 200, 200, 200]);
+    } finally {
+      release();
+      await Promise.allSettled(requests);
+      isolated.closeAllConnections();
+      await new Promise<void>((resolve) => isolated.close(() => resolve()));
+    }
+  });
+  it('does not accept broad trusted-proxy networks', () => {
+    expect(() =>
+      createApp({ database: { ping: async () => {} }, trustedProxies: ['0.0.0.0/0'] }),
+    ).toThrow('Invalid trusted proxies');
+    expect(() =>
+      createApp({ database: { ping: async () => {} }, trustedProxies: ['::/0'] }),
+    ).toThrow('Invalid trusted proxies');
+  });
   const database = { ping: vi.fn<() => Promise<void>>() };
   let server: Server;
   let baseUrl: string;

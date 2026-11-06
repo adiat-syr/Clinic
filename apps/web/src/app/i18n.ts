@@ -1,6 +1,7 @@
 export type Locale = 'ru' | 'kk';
 export const copy = {
   ru: {
+    skip: 'Перейти к содержимому',
     home: 'Главная',
     services: 'Услуги и цены',
     doctors: 'Врачи',
@@ -52,6 +53,7 @@ export const copy = {
     details: 'Подробнее',
   },
   kk: {
+    skip: 'Негізгі мазмұнға өту',
     home: 'Басты бет',
     services: 'Қызметтер мен бағалар',
     doctors: 'Дәрігерлер',

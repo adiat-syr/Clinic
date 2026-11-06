@@ -6,3 +6,7 @@ design-reference/
 apps/api/src/generated/
 .env
 .tmp/
+
+.deploy/
+
+static_analysis_semgrep_*/

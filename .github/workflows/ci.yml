@@ -1,56 +1,29 @@
-name: Foundation checks
-
-on:
-  push:
-  pull_request:
-
+name: clinic-synthetic-checks
+on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
-
 jobs:
-  checks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:18-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
-        env:
-          POSTGRES_USER: clinic_ci
-          POSTGRES_PASSWORD: synthetic_ci_only
-          POSTGRES_DB: clinic_ci
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U clinic_ci -d clinic_ci"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
-    env:
-      NODE_ENV: test
-      DATA_MODE: synthetic
-      DATABASE_URL: postgresql://clinic_ci:synthetic_ci_only@127.0.0.1:5432/clinic_ci
-      CLINIC_TIME_ZONE: Asia/Almaty
-      AUTH_ORIGIN: http://127.0.0.1:5173
-      SEO_REQUIRED: 'true'
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version-file: .node-version
+          node-version: 24.21.0
           cache: npm
       - run: npm ci
-      - name: Ephemeral server keys
-        run: node --input-type=module -e 'import {appendFileSync} from "node:fs"; import {randomBytes} from "node:crypto"; appendFileSync(process.env.GITHUB_ENV,"AUTH_MFA_KEY="+randomBytes(32).toString("hex")+"\nAUTH_CSRF_KEY="+randomBytes(32).toString("hex")+"\n");'
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run openapi:check
-      - run: npm test
-      - run: npm run db:validate
-      - run: npm run test:integration
-      - run: npm run db:deploy
-      - run: npm run db:seed
       - run: npm run setup
-      - run: npm run smoke
+      - run: npm run db:up
+      - run: npm run db:generate && npm run db:validate && npm run db:deploy && npm run db:seed && npm run db:check
+      - run: npm run lint && npm run typecheck && npm run format:check && npm run openapi:check
+      - run: npm run test && npm run test:ops:unit && npm run test:integration
       - run: npx playwright install --with-deps chromium
-      - run: node --env-file-if-exists=.env scripts/test-web.mjs
+      - run: npm run test:web
+      - run: npm run smoke
+      - run: npm audit --audit-level=high
+      - run: node infra/prepare.mjs ci-stage7 staging
+      - run: node infra/deploy.mjs ci-stage7 build staging && node infra/deploy.mjs ci-stage7 up staging
+      - run: node infra/test-ops.mjs ci-stage7 && node infra/test-https.mjs ci-stage7
+      - if: always()
+        run: node infra/deploy.mjs ci-stage7 status staging

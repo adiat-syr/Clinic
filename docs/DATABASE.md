@@ -1,6 +1,14 @@
-# База данных и транзакционное ядро — этапы 2–3
+# База данных и транзакционное ядро
 
-Актуально на 05.11.2026. PostgreSQL **18.6**, Prisma CLI/client/adapter **7.10.1**. Этап 3 добавляет auth/MFA/RBAC и catalogue/staff/audit HTTP API; UI и booking/schedule HTTP пока отсутствуют. Юридические и production-условия README остаются открытыми. Авторизация, протокол и минимальные права: [AUTH.md](AUTH.md).
+Актуально на 07.11.2026: PostgreSQL **18.6**, Prisma **7.10.1**. UI/API реализованы. Предыдущие разделы сохраняют историю гарантий; актуальное дополнение ниже. Авторизация/роли — AUTH.md, внешняя приёмка — STAGE-7-BLOCKERS.md.
+
+## Дополнение этапа7
+
+Полная история — пять миграций. `20261106000100_maintenance_rotation` разрешает только maintenance-сессии при `SET LOCAL clinic.rotate_keys` перевернуть ciphertext/key version immutable receipt без изменения evidence. Старые миграции не менялись. Runtime не меняет документ/контакты/срок receipt, только consumption columns. Maintenance имеет узкие column updates и технические DELETE; audit UPDATE/DELETE/TRUNCATE запрещены. Provisioning проверен реальными ролями.
+
+Backup — readonly REPEATABLE READ экспортированный snapshot, pg_dump18/counts из одного snapshot. Restore — новая закрытая БД, manifest/fullGCM проверены до pg_restore, counts/constraints/integrity, sessions удалены/staff blocked, latest encrypted ledger replay. Finalize fences source и повторяет privacy events перед открытием target. Signed cursor включает DBname/OID и не переносится между БД. Online/staff booking используют общие транзакции/constraints; maintenance сохраняет doctor→service→appointment locks.
+
+Команды/границы восстановления — DEPLOYMENT.md/OPERATIONS.md. Integration/ops runner создают только собственные clinic_test32hex; полная история с нуля, второй deploy и negativeSQL. Никакого reset рабочей DATABASE_URL. Правовые вопросы только LEGAL-REVIEW-REQUIRED.md.
 
 ## Модель и миграции
 

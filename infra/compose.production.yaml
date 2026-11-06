@@ -1,0 +1,374 @@
+name: clinic-${INSTANCE_ID:?Instance ID required}
+services:
+  postgres:
+    image: postgres:18-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+    environment:
+      POSTGRES_USER: clinic_bootstrap
+      POSTGRES_DB: clinic
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    command:
+      [
+        postgres,
+        -c,
+        log_error_verbosity=terse,
+        -c,
+        log_min_error_statement=panic,
+        -c,
+        log_statement=none,
+        -c,
+        log_parameter_max_length_on_error=0,
+      ]
+    secrets: [postgres_password]
+    volumes: [database:/var/lib/postgresql]
+    networks: [backend]
+    restart: unless-stopped
+    shm_size: 256mb
+    mem_limit: 1g
+    cpus: 1.5
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U clinic_bootstrap -d clinic']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${API_IMAGE:-clinic-api:local}
+    build: { context: .., dockerfile: infra/Dockerfile, target: api }
+    environment: &api_env
+      NODE_ENV: production
+      DATA_MODE: ${DATA_MODE:-synthetic}
+      API_HOST: 0.0.0.0
+      CLINIC_TIME_ZONE: ${CLINIC_TIME_ZONE:-Asia/Almaty}
+      CLINIC_PROFILE_FILE: /run/config/clinic.json
+      CLINIC_ACTIVATION_FILE: /run/config/activation.json
+      AUTH_ORIGIN: ${PUBLIC_ORIGIN:?Public origin required}
+      TRUSTED_PROXY_CIDRS: ${PROXY_IP:-172.30.42.10}/32
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-20}
+      DATABASE_URL_FILE: /run/secrets/runtime_url
+      AUTH_MFA_KEY_FILE: /run/secrets/mfa_key
+      AUTH_MFA_KEYS_JSON_FILE: /run/secrets/mfa_keys
+      AUTH_MFA_ACTIVE_VERSION: ${AUTH_MFA_ACTIVE_VERSION:-v1}
+      AUTH_CSRF_KEY_FILE: /run/secrets/csrf_key
+      CONTACT_KEY_VERSION: ${CONTACT_KEY_VERSION:-v1}
+      CONTACT_KEYS_JSON_FILE: /run/secrets/contact_keys
+      BOOKING_HMAC_KEY_FILE: /run/secrets/hmac_key
+      DELETION_LEDGER_KEY_FILE: /run/secrets/ledger_key
+      DELETION_LEDGER_KEYS_JSON_FILE: /run/secrets/ledger_keys
+      DELETION_LEDGER_KEY_VERSION: ${DELETION_LEDGER_KEY_VERSION:-v1}
+      DELETION_LEDGER_DIR: /ledger
+      LEDGER_CHECKPOINT_DIR: /ledger-checkpoint
+    secrets:
+      [runtime_url, mfa_key, mfa_keys, csrf_key, contact_keys, hmac_key, ledger_key, ledger_keys]
+    volumes:
+      - ${CONFIG_DIR:?Config directory required}:/run/config:ro
+      - ${LEDGER_DIR:?Ledger directory required}:/ledger
+      - ${LEDGER_CHECKPOINT_DIR:?Independent checkpoint required}:/ledger-checkpoint
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=32m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    mem_limit: 512m
+    cpus: 1
+    depends_on: { postgres: { condition: service_healthy } }
+  web:
+    image: ${WEB_IMAGE:-clinic-web:local}
+    build: { context: .., dockerfile: infra/Dockerfile, target: web }
+    environment:
+      SITE_HOST: ${SITE_HOST:?Domain required}
+      ACME_EMAIL: ${ACME_EMAIL:?Certificate contact required}
+      ROBOTS_POLICY: ${ROBOTS_POLICY:-noindex}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN}
+    volumes:
+      - web_assets:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      ['${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80', '${HTTPS_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443']
+    networks:
+      edge: {}
+      backend: { ipv4_address: '${PROXY_IP:-172.30.42.10}' }
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    mem_limit: 192m
+    cpus: 0.5
+    depends_on: { api: { condition: service_healthy } }
+  operator:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${OPERATOR_IMAGE:-clinic-operator:local}
+    build: { context: .., dockerfile: infra/Dockerfile, target: operator }
+    profiles: [tools]
+    environment:
+      <<: *api_env
+      DATABASE_URL_FILE: /run/secrets/operator_url
+    secrets: [operator_url, mfa_key, mfa_keys, csrf_key, contact_keys, hmac_key]
+    volumes: ['${CONFIG_DIR}:/run/config:ro']
+    networks: [backend]
+    stdin_open: true
+    tty: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  provisioner:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${OPERATOR_IMAGE:-clinic-operator:local}
+    profiles: [tools]
+    environment:
+      NODE_ENV: production
+      DATA_MODE: ${DATA_MODE:-synthetic}
+      MIGRATION_DATABASE_URL_FILE: /run/secrets/migrator_url
+      BOOTSTRAP_DATABASE_URL_FILE: /run/secrets/bootstrap_url
+      ROLE_PASSWORDS_FILE: /run/secrets/role_passwords
+      ALLOW_DEMO_SEED: ${ALLOW_DEMO_SEED:-no}
+    secrets: [migrator_url, bootstrap_url, role_passwords]
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  backup:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${TOOLS_IMAGE:-clinic-tools:local}
+    build: { context: .., dockerfile: infra/Dockerfile.tools, target: tools }
+    profiles: [tools]
+    environment: &maintenance_env
+      NODE_ENV: production
+      DATABASE_URL_FILE: /run/secrets/backup_url
+      BACKUP_KEY_FILE: /run/secrets/backup_key
+      BACKUP_KEYS_JSON_FILE: /run/secrets/backup_keys
+      BACKUP_KEY_VERSION: ${BACKUP_KEY_VERSION:-v1}
+      DELETION_LEDGER_KEY_FILE: /run/secrets/ledger_key
+      DELETION_LEDGER_KEYS_JSON_FILE: /run/secrets/ledger_keys
+      DELETION_LEDGER_KEY_VERSION: ${DELETION_LEDGER_KEY_VERSION:-v1}
+      BACKUP_DIR: /backups
+      SECONDARY_BACKUP_DIR: /secondary-backups
+      LEDGER_CHECKPOINT_DIR: /ledger-checkpoint
+      DELETION_LEDGER_DIR: /ledger
+      RETENTION_POLICY_FILE: /run/config/retention.json
+    secrets: [backup_url, backup_key, backup_keys, ledger_key, ledger_keys]
+    volumes:
+      [
+        '${BACKUP_DIR:?Backup directory required}:/backups',
+        '${SECONDARY_BACKUP_DIR:?Secondary backup directory required}:/secondary-backups',
+        '${LEDGER_CHECKPOINT_DIR:?Independent checkpoint required}:/ledger-checkpoint',
+        '${LEDGER_DIR:?Independent ledger directory required}:/ledger',
+        '${CONFIG_DIR}:/run/config:ro',
+      ]
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=1g,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  restore:
+    extends: backup
+    profiles: [tools]
+    environment:
+      <<: *maintenance_env
+      RESTORE_ADMIN_URL_FILE: /run/secrets/bootstrap_url
+      DATABASE_CUTOVER_APPROVAL: ${DATABASE_CUTOVER_APPROVAL:-}
+    secrets: [backup_url, bootstrap_url, backup_key, backup_keys, ledger_key, ledger_keys]
+  scheduler:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${TOOLS_IMAGE:-clinic-tools:local}
+    command: [scheduler]
+    environment:
+      <<: *maintenance_env
+      DATABASE_URL_FILE: /run/secrets/maintenance_url
+      BACKUP_DATABASE_URL_FILE: /run/secrets/backup_url
+      SITE_HOST: ${SITE_HOST}
+      CERT_WARNING_DAYS: ${CERT_WARNING_DAYS:-7}
+      TLS_CA_FILE: ${TLS_CA_FILE:-}
+      MONITOR_STATUS_FILE: /backups/monitor.json
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      MONITOR_INTERVAL_SECONDS: ${MONITOR_INTERVAL_SECONDS:-60}
+    secrets: [maintenance_url, backup_url, backup_key, backup_keys, ledger_key, ledger_keys]
+    volumes:
+      [
+        '${BACKUP_DIR}:/backups',
+        '${SECONDARY_BACKUP_DIR:?Secondary backup directory required}:/secondary-backups',
+        '${LEDGER_CHECKPOINT_DIR:?Independent checkpoint required}:/ledger-checkpoint',
+        '${LEDGER_DIR}:/ledger',
+        '${CONFIG_DIR}:/run/config:ro',
+        '${TLS_PUBLIC_DIR:?Public TLS directory required}:/tls:ro',
+      ]
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=1g,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on: { web: { condition: service_healthy } }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "const fs=require('fs');try{const s=JSON.parse(fs.readFileSync('/backups/heartbeat.json'));process.exit(Date.now()-Date.parse(s.checkedAt)<180000?0:1)}catch{process.exit(1)}",
+        ]
+      interval: 60s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+  ca-export:
+    image: ${API_IMAGE:-clinic-api:local}
+    profiles: [tools]
+    user: '0:0'
+    command: [node, infra/ops/export-ca.mjs]
+    environment: { APP_UID: '${APP_UID:-1000}', APP_GID: '${APP_GID:-1000}' }
+    volumes: ['caddy_data:/caddy:ro', '${TLS_PUBLIC_DIR}:/tls']
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [DAC_OVERRIDE, CHOWN]
+    security_opt: [no-new-privileges:true]
+  ops-test:
+    image: ${OPERATOR_IMAGE:-clinic-operator:local}
+    profiles: [tests]
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    entrypoint: [node]
+    environment:
+      <<: *api_env
+      BOOTSTRAP_DATABASE_URL_FILE: /run/secrets/bootstrap_url
+      MIGRATION_DATABASE_URL_FILE: /run/secrets/migrator_url
+      ROLE_PASSWORDS_FILE: /run/secrets/role_passwords
+    secrets:
+      [
+        bootstrap_url,
+        migrator_url,
+        runtime_url,
+        operator_url,
+        maintenance_url,
+        backup_url,
+        role_passwords,
+        mfa_key,
+        mfa_keys,
+        csrf_key,
+        contact_keys,
+        hmac_key,
+      ]
+    volumes:
+      [
+        '${DRILL_DIR:-../.tmp/ops-drill}:/drill',
+        './tests:/app/infra/tests:ro',
+        './ops:/app/infra/ops:ro',
+      ]
+    networks: [backend]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  tools-test-build:
+    image: ${TEST_TOOLS_IMAGE:-clinic-tools-test:local}
+    profiles: [build]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.tools
+      target: tools-test
+      additional_contexts: { app: 'service:api' }
+  ops-restore-test:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${TEST_TOOLS_IMAGE:-clinic-tools-test:local}
+    profiles: [tests]
+    entrypoint: [node]
+    environment:
+      <<: *maintenance_env
+      RESTORE_ADMIN_URL_FILE: /run/secrets/bootstrap_url
+      AUTH_MFA_KEY_FILE: /run/secrets/mfa_key
+      AUTH_CSRF_KEY_FILE: /run/secrets/csrf_key
+      BOOKING_HMAC_KEY_FILE: /run/secrets/hmac_key
+      DATABASE_URL_FILE: /drill/maintenance_database_url
+      BACKUP_DATABASE_URL_FILE: /drill/backup_database_url
+      ALLOW_DISPOSABLE_RESTORE: '1'
+      RETENTION_POLICY_FILE: /drill/policy.json
+      BACKUP_DIR: /drill/backups
+      SECONDARY_BACKUP_DIR: /drill/secondary
+      DELETION_LEDGER_DIR: /drill/ledger
+      LEDGER_CHECKPOINT_DIR: /drill/checkpoint
+    secrets:
+      [bootstrap_url, backup_key, backup_keys, ledger_key, ledger_keys, mfa_key, csrf_key, hmac_key]
+    volumes:
+      [
+        '${DRILL_DIR:-../.tmp/ops-drill}:/drill',
+        './tests:/app/infra/tests:ro',
+        './ops:/app/infra/ops:ro',
+      ]
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=1g,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  assets:
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    image: ${API_IMAGE:-clinic-api:local}
+    profiles: [tools]
+    command: [node, infra/ops/assets.mjs]
+    environment:
+      DATABASE_URL_FILE: /run/secrets/runtime_url
+      CLINIC_PROFILE_FILE: /run/config/clinic.json
+      CLINIC_ACTIVATION_FILE: /run/config/activation.json
+      CLINIC_TIME_ZONE: ${CLINIC_TIME_ZONE:-Asia/Almaty}
+      DATA_MODE: ${DATA_MODE:-synthetic}
+      PUBLIC_SITE_ORIGIN: ${PUBLIC_ORIGIN}
+      SEO_REQUIRED: 'true'
+    secrets: [runtime_url]
+    volumes: ['web_assets:/app/apps/web/dist', '${CONFIG_DIR}:/run/config:ro']
+    networks: [backend]
+  asset-permissions:
+    image: ${API_IMAGE:-clinic-api:local}
+    profiles: [tools]
+    user: '0:0'
+    command: [node, infra/ops/asset-permissions.mjs]
+    environment: { APP_UID: '${APP_UID:-1000}', APP_GID: '${APP_GID:-1000}' }
+    volumes: [web_assets:/app/apps/web/dist]
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: [no-new-privileges:true]
+  rotation:
+    image: ${OPERATOR_IMAGE:-clinic-operator:local}
+    profiles: [tools]
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    environment:
+      <<: *api_env
+      DATABASE_URL_FILE: /run/secrets/maintenance_url
+    secrets: [maintenance_url, mfa_key, mfa_keys, csrf_key, contact_keys, hmac_key]
+    networks: [backend]
+    read_only: true
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+networks:
+  edge: {}
+  backend:
+    internal: true
+    ipam: { config: [{ subnet: '${BACKEND_SUBNET:-172.30.42.0/24}' }] }
+volumes:
+  database: {}
+  web_assets: {}
+  caddy_data: {}
+  caddy_config: {}
+secrets:
+  postgres_password: { file: '${SECRETS_DIR:?Secret directory required}/postgres_password' }
+  runtime_url: { file: '${SECRETS_DIR}/runtime_url' }
+  migrator_url: { file: '${SECRETS_DIR}/migrator_url' }
+  operator_url: { file: '${SECRETS_DIR}/operator_url' }
+  bootstrap_url: { file: '${SECRETS_DIR}/bootstrap_url' }
+  role_passwords: { file: '${SECRETS_DIR}/role_passwords' }
+  mfa_key: { file: '${SECRETS_DIR}/mfa_key' }
+  mfa_keys: { file: '${SECRETS_DIR}/mfa_keys' }
+  csrf_key: { file: '${SECRETS_DIR}/csrf_key' }
+  contact_keys: { file: '${SECRETS_DIR}/contact_keys' }
+  hmac_key: { file: '${SECRETS_DIR}/hmac_key' }
+  maintenance_url: { file: '${SECRETS_DIR}/maintenance_url' }
+  backup_url: { file: '${SECRETS_DIR}/backup_url' }
+  backup_key: { file: '${SECRETS_DIR}/backup_key' }
+  backup_keys: { file: '${SECRETS_DIR}/backup_keys' }
+  ledger_key: { file: '${SECRETS_DIR}/ledger_key' }
+  ledger_keys: { file: '${SECRETS_DIR}/ledger_keys' }

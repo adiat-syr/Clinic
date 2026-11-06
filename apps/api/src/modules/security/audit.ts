@@ -26,6 +26,7 @@ export const auditMetadataSchema = z.strictObject({
         'durationMinutes',
         'services',
         'role',
+        'email',
       ]),
     )
     .max(20)

@@ -1,6 +1,7 @@
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { AccessError } from './errors.js';
 import { mac } from './crypto.js';
+import type { Transaction } from '../booking/transaction.js';
 
 export class DatabaseRateLimiter {
   constructor(
@@ -8,11 +9,17 @@ export class DatabaseRateLimiter {
     private readonly key: Uint8Array,
     private readonly now: () => Date = () => new Date(),
   ) {}
-  async require(scope: string, identity: string, limit: number, periodMs: number) {
+  async require(
+    scope: string,
+    identity: string,
+    limit: number,
+    periodMs: number,
+    transaction?: Transaction,
+  ) {
     const now = this.now();
     const resetsAt = new Date(now.getTime() + periodMs);
     const keyHash = mac(this.key, `rate:${scope}`, identity);
-    const rows = await this.client.$queryRaw<{ attempts: number }[]>`
+    const rows = await (transaction ?? this.client).$queryRaw<{ attempts: number }[]>`
       INSERT INTO rate_limit_buckets (key_hash,attempts,resets_at) VALUES (${keyHash},1,${resetsAt})
       ON CONFLICT (key_hash) DO UPDATE SET
         attempts=CASE WHEN rate_limit_buckets.resets_at<=${now} THEN 1 ELSE LEAST(rate_limit_buckets.attempts+1,${limit + 1}) END,

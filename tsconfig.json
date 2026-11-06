@@ -11,6 +11,8 @@
     "vitest.config.ts",
     "vitest.integration.config.ts",
     "playwright.config.ts",
+    "playwright.https.config.ts",
+    "tests/https/**/*.ts",
     "tests/web/**/*.ts",
     "scripts/seed-web-staff.ts"
   ]

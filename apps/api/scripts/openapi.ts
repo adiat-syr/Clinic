@@ -1,3 +1,4 @@
+import { clinicProfileSchema } from '../src/config/clinic.js';
 import { bookingOpenApi } from './booking-openapi.js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +36,10 @@ const audit = z.strictObject({
 const definitions: Record<string, $ZodType> = {
   Error: apiErrorSchema,
   Health: healthResponseSchema,
+  Clinic: clinicProfileSchema.extend({
+    phoneConsentEnabled: z.boolean(),
+    bookingEnabled: z.boolean(),
+  }),
   Login: auth.loginSchema,
   MfaCode: auth.mfaCodeSchema,
   PasswordChange: auth.passwordChangeSchema,
@@ -168,6 +173,15 @@ const pathParameter = (name: string, uuid = true) => ({
     : { type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', maxLength: 100 },
 });
 const paths: Record<string, unknown> = {
+  '/clinic': {
+    get: operation(
+      'get',
+      'clinicProfile',
+      'Public clinic profile; no server settings or secrets',
+      'public',
+      'Clinic',
+    ),
+  },
   '/health/live': { get: operation('get', 'liveness', 'Process liveness', 'public', 'Health') },
   '/health/ready': { get: operation('get', 'readiness', 'Database readiness', 'public', 'Health') },
   '/auth/csrf': {
@@ -376,7 +390,7 @@ const document = {
     title: 'Clinic API — stage 4',
     version: '0.4.0',
     description:
-      'Synthetic local implementation with booking/schedule API. No admin UI. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations.',
+      'Clinic appointment API and RU/KK staff workspace. Deployment can run synthetic mode or explicitly activated clinic mode. HTTPS production uses __Host cookies; loopback HTTP development uses clinic_dev_session and clinic_dev_csrf. Fetch CSRF again after login/MFA token rotation. All mutations require exact Origin plus CSRF nonce cookie/header. MFA is mandatory for both roles. See AUTH.md for TTLs, rate limits and CLI operations.',
   },
   servers: [{ url: '/api/v1' }],
   paths,

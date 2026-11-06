@@ -17,10 +17,12 @@ export function Booking({
   services,
   doctors,
   locale,
+  timeZone = 'Asia/Almaty',
 }: {
   services: Service[];
   doctors: Doctor[];
   locale: Locale;
+  timeZone?: string;
 }) {
   const t = copy[locale],
     params = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
@@ -66,7 +68,7 @@ export function Booking({
     return () => window.removeEventListener('beforeunload', guard);
   }, [busy, uncertain]);
   const consentKey = consent.data ? `${consent.data.id}:${consent.data.version}` : '';
-  const zone = availability.data?.timeZone ?? 'Asia/Almaty';
+  const zone = availability.data?.timeZone ?? timeZone;
   const time = (v: string) =>
     new Intl.DateTimeFormat(locale === 'ru' ? 'ru-KZ' : 'kk-KZ', {
       timeZone: zone,

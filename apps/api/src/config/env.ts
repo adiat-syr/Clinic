@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  DATA_MODE: z.literal('synthetic'),
+  DATA_MODE: z.enum(['synthetic', 'clinic']),
+  DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(200).default(20),
+  TRUSTED_PROXY_CIDRS: z.string().default(''),
   API_HOST: z.enum(['127.0.0.1', '0.0.0.0']).default('127.0.0.1'),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   DATABASE_URL: z.url().refine((value) => {

@@ -4,8 +4,14 @@ import react from '@vitejs/plugin-react';
 
 const workspaceRoot = fileURLToPath(new URL('../../', import.meta.url));
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, workspaceRoot, 'API_');
+export default defineConfig(({ mode, command }) => {
+  // Loading root .env's NODE_ENV=development during a build selects React's dev runtime.
+  // Production artifacts must be independent of the local development server settings.
+  if (command === 'build') {
+    process.env.NODE_ENV = 'production';
+    delete process.env.VITE_USER_NODE_ENV;
+  }
+  const env = command === 'serve' ? loadEnv(mode, workspaceRoot, 'API_') : {};
   const apiPort = Number(process.env.API_PORT ?? env.API_PORT ?? 3001);
   if (!Number.isInteger(apiPort) || apiPort < 1 || apiPort > 65535) {
     throw new Error('API_PORT must be a valid TCP port');

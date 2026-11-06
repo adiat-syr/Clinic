@@ -42,4 +42,6 @@ GET /admin/appointments и GET /admin/appointments/:id дополнительн�
 
 ## Согласованное дополнение MVP
 
+Этап7: GET /clinic возвращает только public profile плюс bookingEnabled/phoneConsentEnabled. При закрытой clinic activation создание online, consent code и staff booking возвращает503 BOOKING_NOT_ENABLED, независимо от UI. Phone consent дополнительно требует разрешённый phone flag. Auth/RBAC/CSRF/DTO/идемпотентность не изменены. Consent withdrawal в production требует durable encrypted journal; отказ хранилища —503 PRIVACY_JOURNAL_UNAVAILABLE без SQL commit; подтверждённый intent после SQL rollback replay сохраняет withdrawnAt и attribution без самовольного удаления контактов.
+
 Добавлены POST /patient-consent-codes и защищённый POST /admin/appointments: самостоятельное согласие посетителя с одноразовым кодом на 5 минут и дополнительное создание сотрудником без передачи contacts/accepted. Контракты — openapi.json; точная процедура, транзакции, retry и ограничения идентификации — PHONE-BOOKING.md. Основной public POST /appointments сохранён. Только synthetic; это не юридически утверждённая телефонная запись.

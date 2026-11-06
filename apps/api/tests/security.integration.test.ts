@@ -207,6 +207,26 @@ afterAll(async () => {
 });
 
 describe('bootstrap and credential boundaries', () => {
+  it('verifies MFA with a one-connection pool without nested pool checkout', async () => {
+    const small = createPrisma(url, 1),
+      security = new AuthService(small, config, () => clock);
+    try {
+      await security.ready();
+      const browser = new Client();
+      await challenge(browser);
+      advance();
+      await expect(
+        security.verifyMfa(
+          browser.session(),
+          { code: code(rootSecret) },
+          'small-pool',
+          randomUUID(),
+        ),
+      ).resolves.toHaveProperty('token');
+    } finally {
+      await small.$disconnect();
+    }
+  });
   it('operator email change preserves credentials, role and bootstrap identity and revokes sessions', async () => {
     const root = await logged(),
       before = await db.staffUser.findUniqueOrThrow({ where: { id: rootId } }),

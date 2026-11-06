@@ -22,7 +22,13 @@ import {
   message,
 } from './api';
 import { LoadState, Pager, Confirm } from './ui';
-export function Appointments({ admin }: { admin: boolean }) {
+export function Appointments({
+  admin,
+  phoneConsentEnabled = true,
+}: {
+  admin: boolean;
+  phoneConsentEnabled?: boolean;
+}) {
   const [date, setDate] = useState(clinicDay),
     [doctor, setDoctor] = useState(''),
     [status, setStatus] = useState(''),
@@ -67,15 +73,17 @@ export function Appointments({ admin }: { admin: boolean }) {
           {t('Обновить')}
         </button>
       </div>
-      <button
-        className="button"
-        onClick={() => {
-          setCreating(true);
-          setCreated('');
-        }}
-      >
-        {t('Создать запись по коду пациента')}
-      </button>
+      {phoneConsentEnabled && (
+        <button
+          className="button"
+          onClick={() => {
+            setCreating(true);
+            setCreated('');
+          }}
+        >
+          {t('Создать запись по коду пациента')}
+        </button>
+      )}
       {created && (
         <p role="status">
           {t('Заявка создана: ')}

@@ -400,8 +400,12 @@ test('queue network error is recoverable and desktop layout stays within viewpor
   page,
 }) => {
   await login(page);
+  await expect(page.getByText('На выбранную дату записей нет.', { exact: true })).toBeVisible();
   await page.route('**/api/v1/admin/appointments?**', (route) => route.abort());
   await page.getByLabel('Дата', { exact: true }).fill(process.env.WEB_TEST_DATE ?? '');
+  // The fixture date can already equal clinic-local today after UTC midnight offset.
+  // Explicit refresh makes the network failure independent of that coincidence.
+  await page.getByRole('button', { name: 'Обновить', exact: true }).click();
   await expect(page.locator('.admin-content').getByRole('alert')).toBeVisible();
   await page.unroute('**/api/v1/admin/appointments?**');
   await page.getByRole('button', { name: 'Повторить', exact: true }).click();

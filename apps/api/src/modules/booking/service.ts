@@ -31,6 +31,7 @@ const DAY = 24 * 60 * MINUTE;
 type Interval = { startsAt: Date; endsAt: Date };
 
 interface BookingOptions {
+  approvedConsentHash?: string;
   idempotencySecret: Uint8Array;
   transaction?: Transaction;
   actorId?: string;
@@ -222,7 +223,13 @@ export class BookingService {
       const document = await tx.consentDocument.findUnique({
         where: { id: command.consent.documentId },
       });
-      if (!document || document.retiredAt !== null || document.publishedAt > now)
+      if (
+        !document ||
+        document.retiredAt !== null ||
+        document.publishedAt > now ||
+        (this.options.approvedConsentHash &&
+          document.contentSha256 !== this.options.approvedConsentHash)
+      )
         throw new BookingError('CONSENT_CHANGED');
       let acceptedAt = now;
       if (command.consent.receiptHash) {
@@ -350,7 +357,9 @@ export class BookingService {
 
   private async changeWindow(idInput: unknown, input: unknown | null) {
     const id = parse(uuid, idInput);
-    const initial = await this.client.availabilityWindow.findUnique({ where: { id } });
+    const initial = await (this.options.transaction ?? this.client).availabilityWindow.findUnique({
+      where: { id },
+    });
     if (!initial) throw new BookingError('WINDOW_NOT_FOUND');
     const replacement = input === null ? null : parse(windowSchema, input);
     if (replacement) {
@@ -404,7 +413,7 @@ export class BookingService {
 
   async reschedule(input: unknown) {
     const command = parse(moveSchema, input);
-    const initial = await this.client.appointment.findUnique({
+    const initial = await (this.options.transaction ?? this.client).appointment.findUnique({
       where: { id: command.appointmentId },
       select: appointmentSelection,
     });
@@ -452,7 +461,7 @@ export class BookingService {
 
   async transition(input: unknown) {
     const command = parse(transitionSchema, input);
-    const initial = await this.client.appointment.findUnique({
+    const initial = await (this.options.transaction ?? this.client).appointment.findUnique({
       where: { id: command.appointmentId },
       select: appointmentSelection,
     });

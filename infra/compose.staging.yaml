@@ -1,0 +1,10 @@
+services:
+  web:
+    command: [caddy, run, --config, /etc/caddy/Caddyfile.staging, --adapter, caddyfile]
+    environment: { ACME_EMAIL: 'operator@example.invalid', ROBOTS_POLICY: noindex }
+  api:
+    environment: { DATA_MODE: synthetic }
+  scheduler:
+    environment:
+      TLS_CA_FILE: /tls/root.crt
+      CERT_WARNING_DAYS: '0'

@@ -1,3 +1,4 @@
+import type { ClinicProfile } from '../api/clinic';
 import { translate as t, adminHref, adminLocale } from './i18n';
 import { Component, type ReactNode } from 'react';
 import Admin from './Admin';
@@ -22,7 +23,7 @@ class AdminBoundary extends Component<{ children: ReactNode }, { failed: boolean
     );
   }
 }
-export function AdminEntry() {
+export function AdminEntry({ clinic }: { clinic: ClinicProfile }) {
   return (
     <>
       <nav className="admin-language" aria-label={t('Язык интерфейса')}>
@@ -42,7 +43,7 @@ export function AdminEntry() {
         </a>
       </nav>
       <AdminBoundary>
-        <Admin />
+        <Admin clinic={clinic} />
       </AdminBoundary>
     </>
   );

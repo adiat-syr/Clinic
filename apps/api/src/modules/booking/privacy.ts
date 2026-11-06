@@ -22,6 +22,19 @@ export function parsePrivacyEnvironment(env: NodeJS.ProcessEnv): PrivacyConfig {
       .string()
       .regex(/^[0-9a-f]{64}$/)
       .parse(env.BOOKING_HMAC_KEY);
+    const mfaRing = env.AUTH_MFA_KEYS_JSON
+      ? Object.values(
+          z
+            .record(z.string(), z.string().regex(/^[a-f0-9]{64}$/))
+            .parse(JSON.parse(env.AUTH_MFA_KEYS_JSON)),
+        )
+      : [];
+    if (
+      mfaRing.some(
+        (k) => k === hmac || k === env.AUTH_CSRF_KEY || Object.values(values).includes(k),
+      )
+    )
+      throw new Error();
     if (
       !values[activeVersion] ||
       new Set([...Object.values(values), hmac, env.AUTH_MFA_KEY, env.AUTH_CSRF_KEY]).size !==
@@ -76,7 +89,7 @@ export class ContactPrivacy {
       if (!key) throw new Error();
       const b = Buffer.from(value);
       if (b[0] !== 1 || b.length < 30) throw new Error();
-      const cipher = createDecipheriv('aes-256-gcm', key, b.subarray(1, 13));
+      const cipher = createDecipheriv('aes-256-gcm', key, b.subarray(1, 13), { authTagLength: 16 });
       cipher.setAAD(Buffer.from(`clinic:contact:${version}:${purpose}`));
       cipher.setAuthTag(b.subarray(13, 29));
       return Buffer.concat([cipher.update(b.subarray(29)), cipher.final()]).toString('utf8');
