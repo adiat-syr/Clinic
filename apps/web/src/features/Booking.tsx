@@ -13,6 +13,8 @@ import {
   type BookingResult,
 } from '../api/clinic';
 import { copy, type Locale } from '../app/i18n';
+import { portfolioContacts } from '@clinic/contracts';
+import { portfolioDemo } from '../app/portfolio';
 export function Booking({
   services,
   doctors,
@@ -30,8 +32,8 @@ export function Booking({
     [doctorId, setDoctor] = useState(params.get('doctor') ?? ''),
     [date, setDate] = useState(''),
     [slot, setSlot] = useState(''),
-    [name, setName] = useState(''),
-    [phone, setPhone] = useState(''),
+    [name, setName] = useState<string>(portfolioDemo ? portfolioContacts.name : ''),
+    [phone, setPhone] = useState<string>(portfolioDemo ? portfolioContacts.phone : ''),
     [accepted, setAccepted] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
@@ -280,11 +282,12 @@ export function Booking({
           </fieldset>
           <fieldset disabled={busy || uncertain} className="panel">
             <legend>3 · {t.name}</legend>
-            <p>{t.safe}</p>
+            <p>{portfolioDemo ? t.portfolio : t.safe}</p>
             <label>
               {t.name}
               <input
-                autoComplete="name"
+                autoComplete={portfolioDemo ? 'off' : 'name'}
+                readOnly={portfolioDemo}
                 maxLength={120}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -294,7 +297,8 @@ export function Booking({
             <label>
               {t.phone}
               <input
-                autoComplete="tel"
+                autoComplete={portfolioDemo ? 'off' : 'tel'}
+                readOnly={portfolioDemo}
                 type="tel"
                 inputMode="tel"
                 placeholder="+7 (000) 000-00-00"

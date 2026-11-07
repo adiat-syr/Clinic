@@ -5,6 +5,7 @@ import { Booking } from '../features/Booking';
 import { PatientConsent } from '../features/PatientConsent';
 import { copy, type Locale } from './i18n';
 import './site.css';
+import { portfolioDemo } from './portfolio';
 export function App({
   path = typeof location === 'undefined' ? '/ru' : location.pathname,
 }: {
@@ -166,7 +167,9 @@ export function App({
           ))}
         </div>
       </header>
-      {clinic.synthetic && <div className="environment">{t.synthetic}</div>}
+      {clinic.synthetic && (
+        <div className="environment">{portfolioDemo ? t.portfolio : t.synthetic}</div>
+      )}
       <main id="main" className="container">
         {page === 'home' && (
           <section className="hero">
@@ -381,11 +384,13 @@ export function App({
         </a>
         {clinic.synthetic && <p>{t.synthetic}</p>}
         <a href={href('privacy')}>{t.privacy}</a>
-        <a href={href('phone-consent')}>
-          {locale === 'ru'
-            ? 'Согласие для записи с сотрудником'
-            : 'Қызметкер арқылы жазылуға келісім'}
-        </a>
+        {!portfolioDemo && (
+          <a href={href('phone-consent')}>
+            {locale === 'ru'
+              ? 'Согласие для записи с сотрудником'
+              : 'Қызметкер арқылы жазылуға келісім'}
+          </a>
+        )}
       </footer>
       <nav className="mobile-nav" aria-label={t.booking}>
         {nav.map(([p, label], i) => (

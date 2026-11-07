@@ -1,5 +1,8 @@
 import * as z from 'zod/mini';
 
+// Fixed fictional inputs for the isolated, publicly shared portfolio build only.
+export const portfolioContacts = { name: 'Демо Посетитель', phone: '+70000000000' } as const;
+
 export const healthResponseSchema = z.strictObject({
   status: z.enum(['ok', 'ready']),
   service: z.literal('clinic-api'),
